@@ -1,3 +1,5 @@
+const { isAuthorised } = require("../../configs/Globals");
+
 module.exports = (app, express) => {
   const router = express.Router();
   const Globals = require("../../configs/Globals");
@@ -117,12 +119,17 @@ module.exports = (app, express) => {
 
   router.post("/user_register", (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
-    return userObj.register();
+    return userObj.Register();
   });
 
   router.post("/user_login", (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
-    return userObj.userSignIn();
+    return userObj.UserSignIn();
+  });
+
+  router.post("/find_near_match", Globals.isAuthorised, (req, res) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.FindMatches();
   });
 
   app.use(process.env.BASE_API_URL, router);

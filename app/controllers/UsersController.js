@@ -1,5 +1,5 @@
 const Controller = require("./Controller");
-const ObjectId = require("mongodb").ObjectID;
+const ObjectID = require("mongodb").ObjectId;
 const langEn = require("../../configs/en");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
@@ -12,11 +12,14 @@ const Globals = require("../../configs/Globals");
 const Email = require("../services/Email");
 let Form = require("../services/Form");
 let File = require("../services/File");
+const UserPreferances =
+  require("../models/UserPreferanceSchema").UserPreferances;
 const https = require("https");
 var randomstring = require("randomstring");
 var CryptoJS = require("crypto-js");
 var seceretText = "tinder123secure@#$%*&789";
 const moment = require("moment");
+const Aggregation = require("../models/Aggregation");
 
 class UsersController extends Controller {
   constructor() {
@@ -404,13 +407,15 @@ class UsersController extends Controller {
     }
   }
 
-  async userSignIn() {
+  async UserSignIn() {
+    console.log("hit");
     let _this = this;
     var modelsNew = Users;
     var filter = {};
     var lang = langEn;
     try {
       var loginData = _this.req.body;
+      console.log(loginData);
 
       if (!loginData.user_email || !loginData.password)
         return _this.res.send({ status: 0, message: lang.send_data });
@@ -421,8 +426,8 @@ class UsersController extends Controller {
       if (_.isEmpty(user))
         return _this.res.send({ status: 0, message: "user doesn't exist" });
 
-      if (user.user_verificationStatus === false)
-        return _this.res.send({ status: 0, message: lang.user_not_verify });
+      // if (user.user_verificationStatus === false)
+      //   return _this.res.send({ status: 0, message: lang.user_not_verify });
 
       const status = await bcrypt.compare(
         loginData.password.toString(),
@@ -444,6 +449,7 @@ class UsersController extends Controller {
         userDobjN,
         { new: true }
       );
+      user["token"] = token;
       // if (
       //   loginData.user_curent_location &&
       //   loginData.user_curent_location.length > 0
@@ -540,7 +546,7 @@ class UsersController extends Controller {
       )
         return _this.res.send({ status: 0, message: lang.send_data });
 
-      filter = { _id: ObjectId(bodyData.user_id) };
+      filter = { _id: ObjectID(bodyData.user_id) };
 
       let user = await Users.findOne(filter).lean();
 
@@ -588,7 +594,7 @@ class UsersController extends Controller {
     }
   }
 
-  async register() {
+  async Register() {
     let _this = this;
     let filter = "";
     var modelsNew = Users;
@@ -597,7 +603,9 @@ class UsersController extends Controller {
       let form = new Form(_this.req);
       let formObject = await form.parse();
       _this.req.body = formObject.fields;
+      console.log(_this.req.body);
       var dataObj = {};
+      var preferObj = {};
       if (
         _this.req.body.username &&
         _this.req.body.username[0].trim().length > 0
@@ -629,10 +637,14 @@ class UsersController extends Controller {
         _this.req.body.user_gender[0].trim().length > 0
       ) {
         dataObj["user_gender"] = _this.req.body.user_gender[0].trim();
+        preferObj["user_gender"] = _this.req.body.user_gender[0].trim();
       }
       if (_this.req.body.user_dob && _this.req.body.user_dob[0]) {
         dataObj["user_dob"] = _this.req.body.user_dob[0];
-        console.log(Date.now(dataObj["user_dob"]));
+        let birthYear = parseInt(_this.req.body.user_dob[0].split("-")[0]);
+        let currentYear = new Date().getFullYear();
+        let userAge = currentYear - birthYear;
+        preferObj["user_age"] = userAge;
       }
 
       if (_this.req.body.is_hide_dob && _this.req.body.is_hide_dob[0]) {
@@ -644,50 +656,19 @@ class UsersController extends Controller {
       if (_this.req.body.from_mobile && _this.req.body.from_mobile[0]) {
         dataObj["from_mobile"] = _this.req.body.from_mobile[0];
       }
-      if (
-        _this.req.body.preferred_distance_range &&
-        _this.req.body.preferred_distance_range[0]
-      ) {
-        dataObj["preferred_distance_range"] = JSON.parse(
-          _this.req.body.preferred_distance_range[0]
-        );
-      }
-      if (
-        _this.req.body.preferred_age_range &&
-        _this.req.body.preferred_age_range[0]
-      ) {
-        dataObj["preferred_age_range"] = JSON.parse(
-          _this.req.body.preferred_age_range[0]
-        );
-      }
-
-      if (
-        _this.req.body.user_preferred_gender &&
-        _this.req.body.user_preferred_gender[0]
-      ) {
-        dataObj["user_preferred_gender"] =
-          _this.req.body.user_preferred_gender[0];
-      }
-      let coordinates = [];
-      if (
-        _this.req.body.curr_location_long &&
-        _this.req.body.curr_location_long[0]
-      ) {
-        dataObj["curr_location_long"] = _this.req.body.curr_location_long[0];
-        coordinates.push(JSON.parse(_this.req.body.curr_location_long[0]));
-      }
-      if (
-        _this.req.body.curr_location_lat &&
-        _this.req.body.curr_location_lat[0]
-      ) {
-        dataObj["curr_location_lat"] = _this.req.body.curr_location_lat[0];
-        if (coordinates.length > 0) {
-          coordinates.push(JSON.parse(_this.req.body.curr_location_lat[0]));
-        }
-      }
 
       if (!dataObj.user_email || !dataObj.user_password)
         return this.res.send({ status: 0, message: lang.send_data });
+
+      if (
+        dataObj.user_dob &&
+        !moment(dataObj.user_dob, "YYYY-MM-DD", true).isValid()
+      ) {
+        return _this.res.send({
+          status: 0,
+          message: "Invaild user date. Date should be in ['YYYY-MM-DD'] format",
+        });
+      }
 
       filter = { user_email: _this.req.body.user_email };
       var user = await modelsNew.findOne(filter);
@@ -697,23 +678,98 @@ class UsersController extends Controller {
       }
       if (_.isEmpty(user)) {
         console.log(formObject);
-        if (formObject.files.file) {
-          const file = new File(formObject.files);
-          let fileObject = await file.store("users_image");
-          var filepath = fileObject.filePartialPath;
-          dataObj.user_photo = filepath;
-        }
+        // if (formObject.files.file) {
+        //   const file = new File(formObject.files);
+        //   let fileObject = await file.store("users_image");
+        //   var filepath = fileObject.filePartialPath;
+        //   dataObj.user_photo = filepath;
+        // }
         // console.log("dataObj", dataObj)
 
         dataObj["user_photo"] =
           dataObj.user_photo || "/public/no-image-user.png";
         dataObj["user_email"] = dataObj["user_email"].toLowerCase();
-        dataObj["current_coordinates"] = coordinates;
+        dataObj["role_id"] = ObjectID("62ce5d008bedfd0283a56ccd");
         dataObj["is_hide_dob"] =
           dataObj.is_hide_dob && dataObj.is_hide_dob == "true" ? true : false;
 
         const newUser = await new Model(modelsNew).store(dataObj);
         if (_.isEmpty(newUser)) {
+          return _this.res.send({ status: 0, message: lang.error_save_data });
+        }
+        var location = { type: "Point", coordinates: [] };
+
+        if (
+          _this.req.body.search_preferred_gender &&
+          _this.req.body.search_preferred_gender[0]
+        ) {
+          preferObj["search_preferred_gender"] =
+            _this.req.body.search_preferred_gender[0];
+        }
+
+        if (
+          _this.req.body.search_preferred_radius &&
+          _this.req.body.search_preferred_radius[0]
+        ) {
+          preferObj["search_preferred_radius"] =
+            _this.req.body.search_preferred_radius[0];
+        }
+        if (
+          _this.req.body.is_radius_from_location &&
+          _this.req.body.is_radius_from_location[0]
+        ) {
+          preferObj["is_radius_from_location"] =
+            _this.req.body.is_radius_from_location[0];
+        }
+        if (
+          _this.req.body.is_radius_from_current_location &&
+          _this.req.body.is_radius_from_current_location[0]
+        ) {
+          preferObj["is_radius_from_current_location"] =
+            _this.req.body.is_radius_from_current_location[0];
+        }
+        if (
+          _this.req.body.preferred_age_from &&
+          _this.req.body.preferred_age_from[0]
+        ) {
+          preferObj["preferred_age_from"] =
+            _this.req.body.preferred_age_from[0];
+        }
+        if (
+          _this.req.body.preferred_age_to &&
+          _this.req.body.preferred_age_to[0]
+        ) {
+          preferObj["preferred_age_to"] = _this.req.body.preferred_age_to[0];
+        }
+        if (_this.req.body.location_long && _this.req.body.location_long[0]) {
+          location.coordinates.push(
+            parseFloat(JSON.parse(_this.req.body.location_long[0]))
+          );
+        }
+        if (_this.req.body.location_lat && _this.req.body.location_lat[0]) {
+          if (location.coordinates.length > 0) {
+            location.coordinates.push(
+              parseFloat(JSON.parse(_this.req.body.location_lat[0]))
+            );
+          }
+        }
+
+        preferObj["is_radius_from_location"] =
+          preferObj.is_radius_from_location &&
+          dataObj.is_radius_from_location == "true"
+            ? true
+            : false;
+        preferObj["is_radius_from_current_location"] =
+          preferObj.is_radius_from_current_location &&
+          dataObj.is_radius_from_current_location == "true"
+            ? true
+            : false;
+
+        preferObj["location"] = location;
+        preferObj["user_id"] = newUser._id;
+
+        const preferData = await new Model(UserPreferances).store(preferObj);
+        if (_.isEmpty(preferData)) {
           return _this.res.send({ status: 0, message: lang.error_save_data });
         } else {
           return _this.res.send({
@@ -741,6 +797,42 @@ class UsersController extends Controller {
       };
       globalObj.addErrorLogInDB(dataErrorObj);
       return _this.res.send({ status: 0, message: lang.server_error });
+    }
+  }
+
+  async FindMatches() {
+    let _this = this;
+    try {
+      console.log(_this.req.body);
+      if (!_this.req.body.page || !_this.req.body.pagesize) {
+        return _this.res.send({ status: 0, message: "send proper data" });
+      }
+      let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
+
+      let userId = ObjectID(this.req.user.userId);
+      let findUser = await UserPreferances.findOne({ user_id: userId });
+      if (_.isEmpty(findUser)) {
+        return _this.res.send({ status: 0, message: "user does not found" });
+      }
+      var milesToRadian = function (miles) {
+        var earthRadiusInMiles = 3959;
+        return miles / earthRadiusInMiles;
+      };
+      var query = {
+        location: {
+          $geoWithin: {
+            $centerSphere: [findUser.location.coordinates, milesToRadian(15)],
+          },
+        },
+      };
+      let show = await new Aggregation(UserPreferances).matchedUserDetails(
+        query,
+        skip,
+        _this.req.body.pagesize
+      );
+      console.log(show);
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -1103,7 +1195,7 @@ class UsersController extends Controller {
         ) {
           // _this.addUserLocation(user._id, dataObj.user_curent_location_data, dataObj.type_of);
         }
-        await Authtokens.deleteMany({ userId: ObjectId(user._id) });
+        await Authtokens.deleteMany({ userId: ObjectID(user._id) });
 
         var token = await globalObj.getToken(user._id);
 
@@ -1158,7 +1250,7 @@ class UsersController extends Controller {
         if (_.isEmpty(newUser))
           return fn({ status: 0, message: "User not saved." });
 
-        await Authtokens.deleteMany({ userId: ObjectId(newUser._id) });
+        await Authtokens.deleteMany({ userId: ObjectID(newUser._id) });
         var token = await globalObj.getToken(newUser._id);
 
         var daatnew = {
@@ -1229,7 +1321,7 @@ class UsersController extends Controller {
       if (_this.req.body.id) {
         filter1 = {
           delete_status: false,
-          _id: ObjectId(_this.req.body.id),
+          _id: ObjectID(_this.req.body.id),
           user_role: "user",
         };
       } else {
@@ -1349,7 +1441,7 @@ class UsersController extends Controller {
       var userId = this.req.body.user_id || this.req.user.userId;
 
       if (this.req.body.auth_user_id) {
-        loginUserId = ObjectId(this.req.body.auth_user_id);
+        loginUserId = ObjectID(this.req.body.auth_user_id);
       }
 
       if (!userId) {
@@ -1377,13 +1469,13 @@ class UsersController extends Controller {
         }
 
         filter = {
-          _id: ObjectId(userId),
+          _id: ObjectID(userId),
           delete_status: false,
         };
 
         if (decryptedData.type) {
           var filterVidImg = {
-            user_id: ObjectId(userId),
+            user_id: ObjectID(userId),
             is_delete: false,
             is_block: false,
             post_type: decryptedData.type,
@@ -1405,7 +1497,7 @@ class UsersController extends Controller {
 
           if (decryptedData.type == "video") {
             var filterVid = {
-              user_id: ObjectId(userId),
+              user_id: ObjectID(userId),
               is_delete: false,
               is_block: false,
               post_type: "video",
@@ -1420,7 +1512,7 @@ class UsersController extends Controller {
 
           if (decryptedData.type == "image") {
             var filterImg = {
-              user_id: ObjectId(userId),
+              user_id: ObjectID(userId),
               is_delete: false,
               is_block: false,
               post_type: "image",
@@ -1479,7 +1571,7 @@ class UsersController extends Controller {
             // perPage: pagesize
           };
           var filterVid = {
-            user_id: ObjectId(userId),
+            user_id: ObjectID(userId),
             is_delete: false,
             is_block: false,
             post_type: "video",
@@ -1494,7 +1586,7 @@ class UsersController extends Controller {
             totalVid && totalVid.length > 0 ? totalVid[0].totalCount : 0;
           // console.log("total_video", total_video)
           var filterImg = {
-            user_id: ObjectId(userId),
+            user_id: ObjectID(userId),
             is_delete: false,
             is_block: false,
             post_type: "image",
@@ -1512,7 +1604,7 @@ class UsersController extends Controller {
         return _this.res.send(fnObj);
       } else {
         var userProfile = await Users.findOne(
-          { _id: ObjectId(userId) },
+          { _id: ObjectID(userId) },
           {
             _id: 1,
             user_photo: 1,
@@ -1545,7 +1637,7 @@ class UsersController extends Controller {
           : "public/no-image-user.png";
         let sort = { createdAt: 1 };
         var filterVid = {
-          user_id: ObjectId(userId),
+          user_id: ObjectID(userId),
           is_delete: false,
           is_block: false,
           post_type: "video",
@@ -1560,7 +1652,7 @@ class UsersController extends Controller {
           totalVid && totalVid.length > 0 ? totalVid[0].totalCount : 0;
         // console.log("total_video", total_video)
         var filterImg = {
-          user_id: ObjectId(userId),
+          user_id: ObjectID(userId),
           is_delete: false,
           is_block: false,
           post_type: "image",
@@ -1627,7 +1719,7 @@ class UsersController extends Controller {
       // var total = await Users.countDocuments({ "delete_status": false, user_role: "user" })
 
       if (this.req.body.auth_user_id) {
-        loginUserId = ObjectId(this.req.body.auth_user_id);
+        loginUserId = ObjectID(this.req.body.auth_user_id);
       }
 
       var userList = await new User(Users).getPopularUser(
