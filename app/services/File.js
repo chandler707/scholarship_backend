@@ -73,54 +73,31 @@ class File {
                 if (id) {
                     new_name = id + '_user_' + Date.now().toString() + '.' + ext[1];
                 } else {
-                    new_name = folder + '/user_' + Date.now().toString() + '.' + ext[1];
+                    new_name = '/user_' + Date.now().toString() + '.' + ext[1];
                 }
-
 
                 let filePath = '/public/' + folderpath + '/' + new_name;
-                let uploadedFilePath = appRoot + filePath;
-                //console.log('uploadedFilePath', uploadedFilePath)
-                // let uploadedFilePath = path.join(__dirname, '..','..','public','upload',fileName[0] + Date.now().toString() + '.' + fileName[1]);
-                //console.log("uploadedFilePath",uploadedFilePath);
+                let uploadedFilePath = appRoot + filePath;               
 
 
-                var awsFile = await this.uploadVideoOnAWS(mainfile, new_name);
-                let fileObject = {
-                    "originalFilename": mainfile[0].originalFilename,
-                    "filePath": awsFile,
-                    "filePartialPath": awsFile,
-                    "newName": new_name
-                }
+                //**********************************************   AWS  ************************************************************ */
+                // var awsFile = await this.uploadVideoOnAWS(mainfile, new_name);
+                // let fileObject = {
+                //     "originalFilename": mainfile[0].originalFilename,
+                //     "filePath": awsFile,
+                //     "filePartialPath": awsFile,
+                //     "newName": new_name
+                // }                
+                // return resolve(fileObject);
+                //*********************************************************************************************************** */
 
-                // console.log("fileObject", fileObject)
-                return resolve(fileObject);
-                // Method to write the file on server           
-                // Jimp.read(mainfile[0].path)
-                //   .then(lenna => {
-                //       if(w){
-                //           return lenna
-                //           .resize(w, h) // resize
-                //           .quality(60) // set JPEG quality
-                //           //.greyscale() // set greyscale
-                //           .write(uploadedFilePath); // save
-                //       }else{
-                //           return lenna
-                //           .quality(60) // set JPEG quality
-                //           //.greyscale() // set greyscale
-                //           .write(uploadedFilePath); // save
-                //       }
-                //   })
-                //   .catch(err => {
-                //     console.error(err);
-                //   });
-
-                //    return resolve(fileObject);
-                // fs.readFile(mainfile[0].path, (err, data) => {
-                //     fs.writeFile(uploadedFilePath, data, (err) => {
-                //         if (err) { return reject({message: err, status: 0 }); }
-                //         return resolve(fileObject);
-                //     });
-                // });
+                let fileObject = { "originalFilename": mainfile[0].originalFilename, "filePath": uploadedFilePath, "filePartialPath": filePathNew, "newName": new_name }
+                fs.readFile(mainfile[0].path, (err, data) => {
+                    fs.writeFile(uploadedFilePath, data, (err) => {
+                        if (err) { return reject({message: err, status: 0 }); }
+                        return resolve(fileObject);
+                    });
+                });
 
             });
         } catch (error) {
