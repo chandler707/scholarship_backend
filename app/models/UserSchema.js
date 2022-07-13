@@ -30,7 +30,6 @@ var user = new schema({
     delete_status: { type: Boolean, default: false },
     social_full_json: { type: String, default: "" },
     is_hide_dob: { type: Boolean, default: false },
-
     facebook_link: { type: String, default: "https://www.facebook.com/" },
     instagram_link: { type: String, default: "https://www.instagram.com/" },
     twitter_link: { type: String, default: "https://twitter.com/" },
