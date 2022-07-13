@@ -459,6 +459,7 @@ class UsersController extends Controller {
             let formObject = await form.parse();
             _this.req.body = formObject.fields;
             var dataObj = {};
+            
             if (_this.req.body.user_fullname && _this.req.body.user_fullname[0].trim().length > 0) {
                 dataObj['user_fullname'] = _this.req.body.user_fullname[0].trim()
             }
