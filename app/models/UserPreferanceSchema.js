@@ -10,7 +10,7 @@ var userPreferanceSchema = new schema({
     preferred_age_from : {type:Number, default:0},
     preferred_age_to : {type:Number, default:0},
     user_address: { type: String, default: "" },
-    location : { type : "Point", coordinates : [0, 0] },
+    location : {}, //{ type : "Point", coordinates : [0, 0] }
     status: {type:Boolean, default:true},
 },{
     timestamps:true
