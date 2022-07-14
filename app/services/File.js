@@ -47,7 +47,7 @@ class File {
     }
 
     // Method to Store file
-    store(folder, id) {
+    store(folder, id) { 
         var new_name = '';
         try {
 
