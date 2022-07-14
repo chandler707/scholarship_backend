@@ -422,7 +422,7 @@ class UsersController extends Controller {
         return _this.res.send({ status: 0, message: lang.send_data });
 
       filter = { user_email: loginData.user_email.trim().toLowerCase() };
-      let user = await Users.findOne(filter);
+      let user = await Users.findOne(filter).lean();
 
       if (_.isEmpty(user))
         return _this.res.send({ status: 0, message: "user doesn't exist" });
@@ -450,6 +450,7 @@ class UsersController extends Controller {
         userDobjN,
         { new: true }
       );
+      console.log(token);
       user["token"] = token;
       // if (
       //   loginData.user_curent_location &&
@@ -481,6 +482,7 @@ class UsersController extends Controller {
   async ForgotPassword() {
     let _this = this;
     let filter = {};
+    var lang = langEn;
     var modelsNew = Users;
     try {
       var bodyData = _this.req.body;
@@ -526,13 +528,14 @@ class UsersController extends Controller {
         description: error.message,
       };
       globalObj.addErrorLogInDB(dataErrorObj);
-      return _this.res.send({ status: 0, message: lang.server_error });
+      return _this.res.send({ status: 0, message: langEn.server_error });
     }
   }
 
   async ChangePassword() {
     let _this = this;
     let filter = {};
+    var lang = langEn;
     var modelsNew = Users;
     try {
       var bodyData = _this.req.body;
@@ -545,7 +548,7 @@ class UsersController extends Controller {
         !bodyData.new_password ||
         bodyData.new_password === ""
       )
-        return _this.res.send({ status: 0, message: lang.send_data });
+        return _this.res.send({ status: 0, message: langEn.send_data });
 
       filter = { _id: ObjectID(bodyData.user_id) };
 
@@ -603,7 +606,11 @@ class UsersController extends Controller {
     try {
       let form = new Form(_this.req);
       let formObject = await form.parse();
+      console.log("form data", formObject);
+      console.log("form data field", formObject.fields);
+      console.log("form data files", formObject.file);
       _this.req.body = formObject.fields;
+      // console.log("file object", formObject.files.file);
       console.log(_this.req.body);
       var dataObj = {};
       var preferObj = {};
@@ -676,7 +683,7 @@ class UsersController extends Controller {
       var user = await modelsNew.findOne(filter);
 
       if (!_.isEmpty(user)) {
-        return _this.res.send({ status: 0, message: lang.user_exist });
+        return _this.res.send({ status: 0, message: "user already exist" });
       }
       if (_.isEmpty(user)) {
         console.log(formObject);

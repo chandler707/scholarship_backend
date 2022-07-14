@@ -5,6 +5,7 @@ module.exports = (app, express) => {
   const Globals = require("../../configs/Globals");
   const UsersController = require("../controllers/UsersController");
   const DropdownListController = require("../controllers/DropdownListController");
+  const UserDateController = require("../controllers/UserDateController");
 
   router.get("/get_all_settings", (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
@@ -130,6 +131,26 @@ module.exports = (app, express) => {
   router.post("/find_near_match", Globals.isAuthorised, (req, res) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.FindMatches();
+  });
+
+  router.post("/add_date", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.AddUserDate();
+  });
+
+  router.post("/get_date", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.GetUserDate();
+  });
+
+  router.post("/send_date_request", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.sendDateRequest();
+  });
+
+  router.post("/accept_date_request", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.AcceptDateRequest();
   });
 
   app.use(process.env.BASE_API_URL, router);
