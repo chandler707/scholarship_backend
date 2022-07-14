@@ -20,6 +20,7 @@ var CryptoJS = require("crypto-js");
 var seceretText = "tinder123secure@#$%*&789";
 const moment = require("moment");
 const Aggregation = require("../models/Aggregation");
+const UserImages = require("../models/userImagesSchema").UserImages;
 
 class UsersController extends Controller {
   constructor() {
@@ -606,6 +607,7 @@ class UsersController extends Controller {
       console.log(_this.req.body);
       var dataObj = {};
       var preferObj = {};
+      var imageObj = {};
       if (
         _this.req.body.username &&
         _this.req.body.username[0].trim().length > 0
@@ -678,16 +680,14 @@ class UsersController extends Controller {
       }
       if (_.isEmpty(user)) {
         console.log(formObject);
-        // if (formObject.files.file) {
-        //   const file = new File(formObject.files);
-        //   let fileObject = await file.store("users_image");
-        //   var filepath = fileObject.filePartialPath;
-        //   dataObj.user_photo = filepath;
-        // }
-        // console.log("dataObj", dataObj)
+        if (formObject.files.file) {
+          const file = new File(formObject.files);
+          let fileObject = await file.store("users_image");
+          var filepath = fileObject.filePartialPath;
+          imageObj.image_name = filepath;
+        }
+        console.log("dataObj", dataObj);
 
-        dataObj["user_photo"] =
-          dataObj.user_photo || "/public/no-image-user.png";
         dataObj["user_email"] = dataObj["user_email"].toLowerCase();
         dataObj["role_id"] = ObjectID("62ce5d008bedfd0283a56ccd");
         dataObj["is_hide_dob"] =
@@ -697,6 +697,10 @@ class UsersController extends Controller {
         if (_.isEmpty(newUser)) {
           return _this.res.send({ status: 0, message: lang.error_save_data });
         }
+        imageObj["image_name"] =
+          imageObj.image_name || "/public/no-image-user.png";
+        imageObj["user_id"] = newUser._id;
+
         var location = { type: "Point", coordinates: [] };
 
         if (
@@ -769,6 +773,8 @@ class UsersController extends Controller {
         preferObj["user_id"] = newUser._id;
 
         const preferData = await new Model(UserPreferances).store(preferObj);
+        const imageStore = await new Model(UserImages).store(imageObj);
+
         if (_.isEmpty(preferData)) {
           return _this.res.send({ status: 0, message: lang.error_save_data });
         } else {
