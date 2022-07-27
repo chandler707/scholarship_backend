@@ -767,12 +767,12 @@ class UsersController extends Controller {
 
         preferObj["is_radius_from_location"] =
           preferObj.is_radius_from_location &&
-          dataObj.is_radius_from_location == "true"
+            dataObj.is_radius_from_location == "true"
             ? true
             : false;
         preferObj["is_radius_from_current_location"] =
           preferObj.is_radius_from_current_location &&
-          dataObj.is_radius_from_current_location == "true"
+            dataObj.is_radius_from_current_location == "true"
             ? true
             : false;
 
