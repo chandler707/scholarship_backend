@@ -18,6 +18,83 @@ class Aggregation {
             },
             {
               $lookup: {
+                from: "user_dates",
+                let: { userId: "$user_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$user_id", "$$userId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: { "date_text": 1, "dating_date": 1, "status": 1, "user_id": 1 }
+                  }
+                ],
+                as: "user_dates",
+              },
+            },
+            {
+              $unwind: {
+                path: "$user_dates",
+                preserveNullAndEmptyArrays: false // optional
+              }
+            },
+            // {
+            //   $unwind: {
+            //     path: "$user_info",
+            //     preserveNullAndEmptyArrays: true // optional
+            //   }
+            // },
+            // {
+            //   $lookup: {
+            //     from: "user_images",
+            //     let: { userId: "$user_id" },
+            //     pipeline: [
+            //       {
+            //         $match: {
+            //           $expr: {
+            //             $and: [
+            //               { $eq: ["$user_id", "$$userId"] },
+            //               { $eq: ["$is_profile_image", false] },
+            //             ],
+            //           },
+            //         },
+            //       },
+            //     ],
+            //     as: "profile_picture",
+            //   },
+            // },
+            {
+              $group: {
+                _id: "$user_dates._id",
+                date_text: { $first: "$user_dates.date_text" },
+                dating_date: { $first: "$user_dates.dating_date" },
+                user_id: { $first: "$user_dates.user_id" }
+              },
+            },
+            {
+              $lookup: {
+                from: "date_details",
+                let: { dateId: "$_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$date_id", "$$dateId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: { "user_email": 1 }
+                  }
+                ],
+                as: "date_details",
+              },
+            },
+            {
+              $lookup: {
                 from: "users",
                 let: { userId: "$user_id" },
                 pipeline: [
@@ -28,43 +105,46 @@ class Aggregation {
                       },
                     },
                   },
+                  {
+                    $project: { "user_email": 1 }
+                  }
                 ],
                 as: "user_info",
               },
             },
             {
-              $unwind: "$user_info",
+              $unwind: {
+                path: "$user_info",
+                preserveNullAndEmptyArrays: true // optional
+              }
             },
             {
               $lookup: {
-                from: "user_images",
+                from: "user_profiles",
                 let: { userId: "$user_id" },
                 pipeline: [
                   {
                     $match: {
                       $expr: {
-                        $and: [
-                          { $eq: ["$_id", "$$userId"] },
-                          { $eq: ["$is_profile_image", true] },
-                        ],
+                        $eq: ["$user_id", "$$userId"],
                       },
                     },
                   },
+                  {
+                    $project: { "user_profile": 1, "user_gender": 1 }
+                  }
                 ],
-                as: "profile_picture",
+                as: "user_profiles",
               },
             },
             {
-              $unwind: "$profile_picture",
+              $unwind: {
+                path: "$user_profiles",
+                preserveNullAndEmptyArrays: true // optional
+              }
             },
             {
-              $group: {
-                _id: "$user_id",
-                username: { $first: "$user_info.username" },
-                user_gender: { $first: "$user_gender" },
-                user_age: { $first: "$user_age" },
-                profile_picture: { $first: "$profile_picture.image_name" },
-              },
+              $sort: { "dating_date": 1 },
             },
             {
               $skip: skip,
@@ -72,6 +152,7 @@ class Aggregation {
             {
               $limit: limit,
             },
+
           ],
           (err, data) => {
             if (err) {

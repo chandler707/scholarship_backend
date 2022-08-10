@@ -19,6 +19,7 @@ var userPreferanceSchema = new schema(
     user_address: { type: String, default: "" },
     location: {}, //{ type : "Point", coordinates : [0, 0] }
     status: { type: Boolean, default: true },
+    location_type: { type: String, default: '' }
   },
   {
     timestamps: true,

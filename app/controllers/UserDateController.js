@@ -38,7 +38,7 @@ class UserDateController extends Controller {
       } else {
         return _this.res.send({
           status: 1,
-          message: "Date is added successfully",
+          message: "Date is created successfully",
         });
       }
     } catch (error) {
@@ -121,6 +121,7 @@ class UserDateController extends Controller {
         return _this.res.send({
           status: 1,
           message: "Date request has been sent",
+          data:saveDateDetails
         });
       }
     } catch (error) {
@@ -181,7 +182,6 @@ class UserDateController extends Controller {
       return _this.res.send({ status: 0, message: langEn.server_error });
     }
   }
-
   async SeeSentRequest() {
     let _this = this;
     try {

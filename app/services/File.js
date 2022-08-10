@@ -57,7 +57,7 @@ class File {
         if (_.isEmpty(mainfile)) reject("Please send file.");
         let fileName = "";
         var folderpath = folder ? "upload/" + folder : "upload";
-        // console.log("filenewName",this.file)
+        // console.log("filenewName",this.file, mainfile)
         if (this.filenewName) {
           fileName = this.filenewName.split(".");
           var ext = re.exec(this.filenewName);
@@ -65,7 +65,7 @@ class File {
           fileName = mainfile[0].originalFilename.split(".");
           var ext = re.exec(mainfile[0].originalFilename);
         }
-        console.log("ext**", ext, ext[0], ext[1]);
+        // console.log("ext**", ext, ext[0], ext[1]);
         if (id) {
           new_name = id + "_user_" + Date.now().toString() + "." + ext[1];
         } else {

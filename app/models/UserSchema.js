@@ -2,13 +2,10 @@ var mongoose = require("mongoose");
 var schema = mongoose.Schema;
 var crypto = require("crypto");
 
-var user = new schema(
-  {
+var user = new schema({
     username: { type: String, default: "" },
     user_email: { type: String, default: "" },
-    user_password: { type: String, default: "" },
-    user_gender: { type: String, default: "" },
-    user_dob: { type: Date, default: "" },
+    user_password: { type: String, default: "" },    
     role_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "roles",

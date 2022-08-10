@@ -12,15 +12,23 @@ const Globals = require("../../configs/Globals");
 const Email = require("../services/Email");
 let Form = require("../services/Form");
 let File = require("../services/File");
-const UserPreferances =
-  require("../models/UserPreferanceSchema").UserPreferances;
+const UserPreferances = require("../models/UserPreferanceSchema").UserPreferances;
+const UserProfiles = require("../models/UserProfileSchema").UserProfiles;
 const https = require("https");
 var randomstring = require("randomstring");
 var CryptoJS = require("crypto-js");
 var seceretText = "tinder123secure@#$%*&789";
 const moment = require("moment");
 const Aggregation = require("../models/Aggregation");
-const UserImages = require("../models/userImagesSchema").UserImages;
+const UserImages = require("../models/UserImagesSchema").UserImages;
+const NodeGeocoder = require('node-geocoder');
+const options = {
+  provider: 'google',
+  // Optional depending on the providers
+  // fetch: customFetchImplementation,
+  apiKey: 'AIzaSyCqnGVf4ELk_GRC6CQ1hqwo7BBLIO_49qI', // for Mapquest, OpenCage, Google Premier
+  // formatter: null // 'gpx', 'string', ...
+};
 
 class UsersController extends Controller {
   constructor() {
@@ -44,6 +52,48 @@ class UsersController extends Controller {
       };
       globalObj.addErrorLogInDB(dataErrorObj);
       return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async checkEmailExist() {
+    let _this = this;
+    var modelsNew = Users;
+
+    try {
+
+      //console.log("_this.req.body", _this.req.body) 
+
+      if (!_this.req.body.email)
+        return _this.res.send({ status: 0, message: 'Please send proper data.' });
+
+      let emailId = _this.req.body.email.toLowerCase();
+
+      let globalObj = new Globals();
+      const tokenEmail = await globalObj.generateToken(emailId, 180); //180 = 3*60 (3 min)
+
+      let user = await modelsNew.findOne({ "user_email": emailId }, { "user_email": 1, "user_firstname": 1, "user_fullname": 1 });
+
+      if (_.isEmpty(user))
+        return _this.res.send({ status: 1, message: 'This email is not register on our portal' });
+
+      return _this.res.send({ status: 0, message: 'This email is already register on our portal' });
+
+
+
+    } catch (error) {
+
+      console.log("error", error)
+
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: 'API Error',
+        api_name: 'User Route Api',
+        finction_name: 'checkEmailExist',
+        error_title: error.name,
+        description: error.message
+      }
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: 'Server Error' });
     }
   }
 
@@ -416,19 +466,70 @@ class UsersController extends Controller {
     var lang = langEn;
     try {
       var loginData = _this.req.body;
-      console.log(loginData);
+      // console.log('******', loginData);
 
-      if (!loginData.user_email || !loginData.password)
+      if (!loginData.email || !loginData.password)
         return _this.res.send({ status: 0, message: lang.send_data });
 
-      filter = { user_email: loginData.user_email.trim().toLowerCase() };
-      let user = await Users.findOne(filter).lean();
+      filter = { user_email: loginData.email.trim().toLowerCase() };
+
+      // let user = await Users.findOne(filter).lean();
+      let user = await Users.aggregate([
+        {
+          $match: filter
+        },
+        {
+          $lookup: {
+            from: 'user_preferances',
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$user_id", "$$userId"]
+                  }
+                }
+              },
+              // { $project: { _id: 1, company_name: 1 } }
+            ],
+            as: 'user_preferances',
+          }
+        },
+        {
+          $unwind: {
+            path: "$user_preferances",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            "_id": 1,
+            "user_email": 1,
+            "user_verificationStatus": 1,
+            "user_password": 1,
+            "user_status": 1,
+            "device_id": 1,
+            "device_token": 1,
+            "device_type": 1,
+            "is_hide_dob": 1,
+            "login_type": 1,
+            "location_type": "$user_preferances.location_type",
+            "preferred_age_from": "$user_preferances.preferred_age_from",
+            "preferred_age_to": "$user_preferances.preferred_age_to",
+            "search_preferred_radius": "$user_preferances.search_preferred_radius"
+          }
+        }
+      ]);
 
       if (_.isEmpty(user))
         return _this.res.send({ status: 0, message: "user doesn't exist" });
 
       // if (user.user_verificationStatus === false)
       //   return _this.res.send({ status: 0, message: lang.user_not_verify });
+
+      // console.log("user", user)
+      user = user[0]
+      // return false;
 
       const status = await bcrypt.compare(
         loginData.password.toString(),
@@ -604,17 +705,80 @@ class UsersController extends Controller {
     var modelsNew = Users;
     var lang = langEn;
     try {
+      // console.log("res")
+      // const geocoder = NodeGeocoder(options);
+      // const res = await geocoder.geocode('kalyen gnaj bassi jaipur 303301');
+      // console.log("res", JSON.stringify(res))
+      // return false;
+
       let form = new Form(_this.req);
       let formObject = await form.parse();
-      console.log("form data", formObject);
-      console.log("form data field", formObject.fields);
-      console.log("form data files", formObject.file);
+      // console.log("form data", formObject);
+      // console.log("form data field", formObject.fields);
       _this.req.body = formObject.fields;
-      // console.log("file object", formObject.files.file);
-      console.log(_this.req.body);
+
       var dataObj = {};
+      var userProfile = {};
       var preferObj = {};
-      var imageObj = {};
+      var imageObj = { "is_profile_image": true };
+
+      if (
+        _this.req.body.first_name &&
+        _this.req.body.first_name[0].trim().length > 0
+      ) {
+        userProfile["first_name"] = _this.req.body.first_name[0].trim();
+      }
+
+      if (
+        _this.req.body.last_name &&
+        _this.req.body.last_name[0].trim().length > 0
+      ) {
+        userProfile["last_name"] = _this.req.body.last_name[0].trim();
+      }
+
+      if (
+        _this.req.body.about_me &&
+        _this.req.body.about_me[0].trim().length > 0
+      ) {
+        userProfile["about_me"] = _this.req.body.about_me[0].trim();
+      }
+
+      if (
+        _this.req.body.city &&
+        _this.req.body.city[0].trim().length > 0
+      ) {
+        userProfile["city"] = _this.req.body.city[0].trim();
+      }
+
+      if (
+        _this.req.body.state &&
+        _this.req.body.state[0].trim().length > 0
+      ) {
+        userProfile["state"] = _this.req.body.state[0].trim();
+      }
+
+      if (
+        _this.req.body.country &&
+        _this.req.body.country[0].trim().length > 0
+      ) {
+        userProfile["country"] = _this.req.body.country[0].trim();
+      }
+
+      if (
+        _this.req.body.post_code &&
+        _this.req.body.post_code[0].trim().length > 0
+      ) {
+        userProfile["post_code"] = _this.req.body.post_code[0].trim();
+      }
+
+      if (
+        _this.req.body.address &&
+        _this.req.body.address[0].trim().length > 0
+      ) {
+        userProfile["address"] = _this.req.body.address[0].trim();
+      }
+
+
       if (
         _this.req.body.username &&
         _this.req.body.username[0].trim().length > 0
@@ -626,7 +790,7 @@ class UsersController extends Controller {
         _this.req.body.user_email &&
         _this.req.body.user_email[0].trim().length > 0
       ) {
-        dataObj["user_email"] = _this.req.body.user_email[0].trim();
+        dataObj["user_email"] = _this.req.body.user_email[0].trim().toLowerCase();
       }
 
       if (
@@ -645,11 +809,11 @@ class UsersController extends Controller {
         _this.req.body.user_gender &&
         _this.req.body.user_gender[0].trim().length > 0
       ) {
-        dataObj["user_gender"] = _this.req.body.user_gender[0].trim();
+        userProfile["user_gender"] = _this.req.body.user_gender[0].trim();
         preferObj["user_gender"] = _this.req.body.user_gender[0].trim();
       }
       if (_this.req.body.user_dob && _this.req.body.user_dob[0]) {
-        dataObj["user_dob"] = _this.req.body.user_dob[0];
+        userProfile["user_dob"] = _this.req.body.user_dob[0];
         let birthYear = parseInt(_this.req.body.user_dob[0].split("-")[0]);
         let currentYear = new Date().getFullYear();
         let userAge = currentYear - birthYear;
@@ -659,9 +823,9 @@ class UsersController extends Controller {
       if (_this.req.body.is_hide_dob && _this.req.body.is_hide_dob[0]) {
         dataObj["is_hide_dob"] = _this.req.body.is_hide_dob[0];
       }
-      if (_this.req.body.device_token && _this.req.body.device_token[0]) {
-        dataObj["device_token"] = _this.req.body.device_token[0];
-      }
+      // if (_this.req.body.device_token && _this.req.body.device_token[0]) {
+      //   dataObj["device_token"] = _this.req.body.device_token[0];
+      // }
       if (_this.req.body.from_mobile && _this.req.body.from_mobile[0]) {
         dataObj["from_mobile"] = _this.req.body.from_mobile[0];
       }
@@ -686,26 +850,33 @@ class UsersController extends Controller {
         return _this.res.send({ status: 0, message: "user already exist" });
       }
       if (_.isEmpty(user)) {
-        console.log(formObject);
-        if (formObject.files.file) {
-          const file = new File(formObject.files);
-          let fileObject = await file.store("users_image");
-          var filepath = fileObject.filePartialPath;
-          imageObj.image_name = filepath;
-        }
+        // console.log(formObject);
+
+
+        // if (formObject.files.user_profile) {
+        //   const file = new File(formObject.files.user_profile);
+        //   let fileObject = await file.store("users_image");
+        //   var filepath = fileObject.filePartialPath;
+        //   imageObj.image_name = filepath;
+        // }
+
         console.log("dataObj", dataObj);
 
         dataObj["user_email"] = dataObj["user_email"].toLowerCase();
         dataObj["role_id"] = ObjectID("62ce5d008bedfd0283a56ccd");
-        dataObj["is_hide_dob"] =
-          dataObj.is_hide_dob && dataObj.is_hide_dob == "true" ? true : false;
+        // dataObj["is_hide_dob"] = dataObj.is_hide_dob && dataObj.is_hide_dob == "true" ? true : false;
 
         const newUser = await new Model(modelsNew).store(dataObj);
         if (_.isEmpty(newUser)) {
           return _this.res.send({ status: 0, message: lang.error_save_data });
         }
-        imageObj["image_name"] =
-          imageObj.image_name || "/public/no-image-user.png";
+
+        if (formObject.files) {
+          var fileKeys = Object.keys(formObject.files)
+          var ss = await this.imageUploadFn(fileKeys, formObject.files, newUser._id);
+        }
+
+        imageObj["image_name"] = imageObj.image_name || "/public/no-image-user.png";
         imageObj["user_id"] = newUser._id;
 
         var location = { type: "Point", coordinates: [] };
@@ -725,6 +896,15 @@ class UsersController extends Controller {
           preferObj["search_preferred_radius"] =
             _this.req.body.search_preferred_radius[0];
         }
+
+        if (
+          _this.req.body.location_type &&
+          _this.req.body.location_type[0]
+        ) {
+          preferObj["location_type"] =
+            _this.req.body.location_type[0];
+        }
+
         if (
           _this.req.body.is_radius_from_location &&
           _this.req.body.is_radius_from_location[0]
@@ -780,7 +960,16 @@ class UsersController extends Controller {
         preferObj["user_id"] = newUser._id;
 
         const preferData = await new Model(UserPreferances).store(preferObj);
-        const imageStore = await new Model(UserImages).store(imageObj);
+
+        // console.log("formObject/.files", formObject.files)
+        const file = new File(formObject.files['user_profile']);
+        // console.log("file", JSON.stringify(file))
+        let fileObject = await file.store("users_image");
+        var filepath = fileObject.filePartialPath;
+        userProfile['user_profile'] = filepath
+        userProfile["user_id"] = newUser._id;
+        const userProfileObj = await new Model(UserProfiles).store(userProfile);
+        // const imageStore = await new Model(UserImages).store(imageObj);
 
         if (_.isEmpty(preferData)) {
           return _this.res.send({ status: 0, message: lang.error_save_data });
@@ -813,17 +1002,126 @@ class UsersController extends Controller {
     }
   }
 
+  async uploadProfileImage() {
+    var _this = this;
+    try {
+
+      let form = new Form(_this.req);
+      let formObject = await form.parse();
+      _this.req.body = formObject.fields;
+
+      var userId = _this.req.user.userId;
+
+      if (formObject.files) {
+        var fileKeys = Object.keys(formObject.files)
+        var ss = await this.imageUploadFn(fileKeys, formObject.files, userId);
+        var imagArr = await UserImages.find({ "user_id": ObjectID(userId), is_profile_image: false }).sort({ "image_order": 1 })
+        return _this.res.send({ status: 1, message: "Image uploaded successfully", data: imagArr });
+      }
+
+
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "deleteProfileImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async imageUploadFn(fileKeys, files, user_id) {
+    var _this = this;
+    try {
+      var arr = []
+      return new Promise(async (resolve, reject) => {
+        var imagArr = await UserImages.find({ "user_id": ObjectID(user_id), is_profile_image: false }).countDocuments();
+        // imagArr = imagArr + 1;
+
+        console.log("imagArr********", imagArr)
+        _this.imageUploadRecuringFn(fileKeys, files, user_id, arr, imagArr, function (res) {
+          resolve(res)
+        })
+      })
+
+    } catch (error) {
+      console.log("error", error)
+    }
+  }
+
+  async imageUploadRecuringFn(fileKeys, files, user_id, arr, i, fn) {
+    try {
+      if (fileKeys.length > 0) {
+        var key = fileKeys[0];
+        if (key == 'user_profile') {
+          fileKeys.splice(0, 1)
+          i++
+          this.imageUploadRecuringFn(fileKeys, files, user_id, arr, i, fn)
+        } else {
+
+          var imageObj = {}
+          const file = new File(files[key]);
+          // console.log("file", JSON.stringify(file))
+          let fileObject = await file.store("users_image");
+          var filepath = fileObject.filePartialPath;
+          imageObj.image_name = filepath;
+
+          if (key == 'user_profile') {
+            imageObj.is_profile_image = true;
+            imageObj.image_order = 0;
+          } else {
+            imageObj.image_order = i;
+          }
+          imageObj.user_id = ObjectID(user_id);
+          const imageStore = await new Model(UserImages).store(imageObj);
+          arr.push(imageStore)
+          fileKeys.splice(0, 1)
+          i++
+          this.imageUploadRecuringFn(fileKeys, files, user_id, arr, i, fn)
+        }
+      } else {
+        fn(arr)
+      }
+    } catch (error) {
+      consoel.log("imageUploadRecuringFn", error)
+    }
+  }
+
   async FindMatches() {
     let _this = this;
     try {
-      console.log(_this.req.body);
+      console.log("body", _this.req.body);
+      var bodyData = _this.req.body;
+      var findUser = {}
+
       if (!_this.req.body.page || !_this.req.body.pagesize) {
         return _this.res.send({ status: 0, message: "send proper data" });
       }
+
+      if (bodyData.location_type == 'current_location' && (bodyData.latitude == null) || (bodyData.latitude == undefined) || (bodyData.latitude == "")) {
+        return _this.res.send({ status: 0, message: "send proper data" });
+      }
+
       let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
 
       let userId = ObjectID(this.req.user.userId);
-      let findUser = await UserPreferances.findOne({ user_id: userId });
+
+      if (bodyData.location_type == 'current_location') {
+        bodyData["location"] = { type: "Point", coordinates: [bodyData.longitude, bodyData.latitude] }
+        findUser = bodyData;
+        var UserProfilesData = await UserPreferances.findOneAndUpdate({ "user_id": userId }, { "location": bodyData["location"] });
+        // console.log("UserProfilesData", UserProfilesData)
+      } else {
+        findUser = await UserPreferances.findOne({ user_id: userId });
+      }
+
+      console.log("FindMatches", bodyData)
       if (_.isEmpty(findUser)) {
         return _this.res.send({ status: 0, message: "user does not found" });
       }
@@ -831,21 +1129,44 @@ class UsersController extends Controller {
         var earthRadiusInMiles = 3959;
         return miles / earthRadiusInMiles;
       };
-      var query = {
+      var filter = {
+        "user_id": { $nin: [userId] },
+        "preferred_age_from": { $gte: bodyData.preferred_age_from },
+        "preferred_age_to": { $lte: bodyData.preferred_age_to },
         location: {
           $geoWithin: {
-            $centerSphere: [findUser.location.coordinates, milesToRadian(15)],
+            $centerSphere: [findUser.location.coordinates, milesToRadian(bodyData.miles)],
           },
-        },
-      };
-      let show = await new Aggregation(UserPreferances).matchedUserDetails(
-        query,
+        }
+      }
+      // var query = {
+      //   location: {
+      //     $geoWithin: {
+      //       $centerSphere: [findUser.location.coordinates, milesToRadian(bodyData.miles)],
+      //     },
+      //   },
+      // };
+
+      console.log("filter", JSON.stringify(filter))
+      let list = await new Aggregation(UserPreferances).matchedUserDetails(
+        filter,
         skip,
         _this.req.body.pagesize
       );
-      console.log(show);
+      // console.log("list", list);
+      return _this.res.send({ status: 1, total: list.length, data: list, page: bodyData.page , pagesize : bodyData.pagesize });
     } catch (error) {
-      console.log(error);
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "FindMatches",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
     }
   }
 
@@ -1113,7 +1434,7 @@ class UsersController extends Controller {
   async userLogout() {
     let _this = this;
     var modelsNew = Users;
-    var lang = _this.req.body.localization === "en" ? langEn : langEr;
+    var lang = langEn;
     try {
       // if (!_this.req.body.uid)
       //     return _this.res.send({ status: 0, message: lang.send_data });
@@ -1441,7 +1762,7 @@ class UsersController extends Controller {
     }
   }
 
-  async getUserProfile(flag) {
+  async getUserProfile() {
     let _this = this;
     let filter = {};
     var lang = langEn;
@@ -1464,228 +1785,109 @@ class UsersController extends Controller {
         });
       }
 
-      // console.log("flag", flag)
+      var userDetaiol = await Users.aggregate([
+        {
+          $match: { _id: ObjectID(userId) }
+        },
+        {
+          $lookup: {
+            from: "user_profiles",
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$user_id", "$$userId"],
+                  },
+                },
+              },
+            ],
+            as: "user_profiles",
+          },
+        },
+        {
+          $lookup: {
+            from: "user_preferances",
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$user_id", "$$userId"],
+                  },
+                },
+              },
+            ],
+            as: "user_preferances",
+          },
+        },
+        {
+          $lookup: {
+            from: "user_preferances",
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$user_id", "$$userId"],
+                  },
+                },
+              },
+            ],
+            as: "user_preferances",
+          },
+        },
+        {
+          $lookup: {
+            from: "user_images",
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$user_id", "$$userId"] },
+                      { $eq: ["$is_profile_image", false] },
+                    ],
+                  },
+                },
+              },
+              { "$sort": { "image_order": 1 } }
+            ],
+            as: "user_images",
+          },
+        },
+        {
+          $lookup: {
+            from: "user_images",
+            let: { userId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$user_id", "$$userId"] },
+                      { $eq: ["$is_profile_image", true] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "user_Profile_images",
+          },
+        },
+        // {
+        //     $unwind: {
+        //         path: "$users",
+        //         preserveNullAndEmptyArrays: true // optional
+        //     }
+        // },
+      ]);
 
-      if (flag) {
-        var decryptedData = _this.req.body;
-        // if (!decryptedData.page || !decryptedData.pagesize) {
-        //     return _this.res.send({ status: 0, message: lang.send_data });
-        // }
 
-        var pagesize = parseInt(5);
-        var page = parseInt(1);
 
-        let skip = (page - 1) * pagesize;
-        let sort = { createdAt: 1 };
-        if (decryptedData.sort) {
-          sort = decryptedData.sort;
-        }
+      return _this.res.send({ status: 1, data: userDetaiol });
 
-        filter = {
-          _id: ObjectID(userId),
-          delete_status: false,
-        };
-
-        if (decryptedData.type) {
-          var filterVidImg = {
-            user_id: ObjectID(userId),
-            is_delete: false,
-            is_block: false,
-            post_type: decryptedData.type,
-          };
-          console.log("filterVidImg", filterVidImg);
-          statusArr = await new User(Posts).getTotalVideoImageList(
-            skip,
-            pagesize,
-            { createdAt: -1 },
-            filterVidImg
-          );
-          fnObj = {
-            status: 1,
-            message: " Data",
-            list: statusArr,
-            page: page,
-            perPage: pagesize,
-          };
-
-          if (decryptedData.type == "video") {
-            var filterVid = {
-              user_id: ObjectID(userId),
-              is_delete: false,
-              is_block: false,
-              post_type: "video",
-            };
-            const totalVid = await new User(Posts).getTotalVideoImageCount(
-              sort,
-              filterVid
-            );
-            fnObj["total_video"] =
-              totalVid && totalVid.length > 0 ? totalVid[0].totalCount : 0;
-          }
-
-          if (decryptedData.type == "image") {
-            var filterImg = {
-              user_id: ObjectID(userId),
-              is_delete: false,
-              is_block: false,
-              post_type: "image",
-            };
-            const totalImg = await new User(Posts).getTotalVideoImageCount(
-              sort,
-              filterImg
-            );
-            fnObj["total_image"] =
-              totalImg && totalImg.length > 0 ? totalImg[0].totalCount : 0;
-          }
-        } else {
-          statusArr = await new User(Users).getUserProfileByID(
-            skip,
-            pagesize,
-            { createdAt: -1 },
-            filter,
-            userId,
-            loginUserId
-          );
-          console.log("statusArr", statusArr);
-          var newObj = {};
-          if (statusArr && statusArr.length > 0) {
-            statusArr = statusArr[0];
-            newObj = {
-              _id: statusArr._id,
-              user_photo: statusArr.user_photo,
-              user_fullname: statusArr.user_fullname || "",
-              showkt_id: statusArr.showkt_id || "",
-              profile_type: statusArr.profile_type || "",
-              // "user_dob": "$user_dob",
-              user_gender: statusArr.user_gender || "",
-              // "user_phone": "$user_phone",
-              // "user_email": "$user_email",
-              total_post: statusArr.total_post || "",
-              user_bio: statusArr.user_bio || "",
-              facebook_link: statusArr.facebook_link || "",
-              instagram_link: statusArr.instagram_link || "",
-              twitter_link: statusArr.twitter_link || "",
-              linkedin_link: statusArr.linkedin_link || "",
-              youtube_link: statusArr.youtube_link || "",
-              website_link: statusArr.website_link || "",
-              followers_count: statusArr.followers_count || "",
-              following_count: statusArr.following_count || "",
-              post_data_images: statusArr.post_data_images || "",
-              post_data_video: statusArr.post_data_video || "",
-              following: statusArr.following,
-            };
-            // console.log("newObj", newObj)
-          }
-          fnObj = {
-            status: 1,
-            message: " Data",
-            list: newObj,
-            // page: page,
-            // perPage: pagesize
-          };
-          var filterVid = {
-            user_id: ObjectID(userId),
-            is_delete: false,
-            is_block: false,
-            post_type: "video",
-          };
-
-          // console.log("total_video", JSON.stringify(filterVid))
-          const totalVid = await new User(Posts).getTotalVideoImageCount(
-            sort,
-            filterVid
-          );
-          var total_video =
-            totalVid && totalVid.length > 0 ? totalVid[0].totalCount : 0;
-          // console.log("total_video", total_video)
-          var filterImg = {
-            user_id: ObjectID(userId),
-            is_delete: false,
-            is_block: false,
-            post_type: "image",
-          };
-          const totalImg = await new User(Posts).getTotalVideoImageCount(
-            sort,
-            filterImg
-          );
-          var total_image =
-            totalImg && totalImg.length > 0 ? totalImg[0].totalCount : 0;
-          console.log("total_image", total_image);
-          fnObj["total_post"] = total_image + total_video;
-        }
-
-        return _this.res.send(fnObj);
-      } else {
-        var userProfile = await Users.findOne(
-          { _id: ObjectID(userId) },
-          {
-            _id: 1,
-            user_photo: 1,
-            user_fullname: 1,
-            showkt_id: 1,
-            user_bio: 1,
-            user_dob: 1,
-            user_gender: 1,
-            user_phone: 1,
-            user_email: 1,
-            account_type: 1,
-            facebook_link: 1,
-            instagram_link: 1,
-            twitter_link: 1,
-            linkedin_link: 1,
-            youtube_link: 1,
-            website_link: 1,
-            followers_count: 1,
-            following_count: 1,
-            is_hide_dob: 1,
-            push_notification_status: 1,
-            comment_notification_status: 1,
-            like_notification_status: 1,
-            follow_notification_status: 1,
-          }
-        );
-
-        userProfile["user_photo"] = userProfile.user_photo
-          ? userProfile.user_photo
-          : "public/no-image-user.png";
-        let sort = { createdAt: 1 };
-        var filterVid = {
-          user_id: ObjectID(userId),
-          is_delete: false,
-          is_block: false,
-          post_type: "video",
-        };
-
-        // console.log("total_video", JSON.stringify(filterVid))
-        const totalVid = await new User(Posts).getTotalVideoImageCount(
-          sort,
-          filterVid
-        );
-        var total_video =
-          totalVid && totalVid.length > 0 ? totalVid[0].totalCount : 0;
-        // console.log("total_video", total_video)
-        var filterImg = {
-          user_id: ObjectID(userId),
-          is_delete: false,
-          is_block: false,
-          post_type: "image",
-        };
-
-        const totalImg = await new User(Posts).getTotalVideoImageCount(
-          sort,
-          filterImg
-        );
-        var total_image =
-          totalImg && totalImg.length > 0 ? totalImg[0].totalCount : 0;
-        // console.log("total_image", total_image)
-        var total_post = total_image + total_video;
-
-        return this.res.send({
-          status: 1,
-          data: userProfile,
-          total_post: total_post,
-        });
-      }
     } catch (error) {
       console.log("error", error);
       let globalObj = new Globals();
@@ -1765,5 +1967,287 @@ class UsersController extends Controller {
       return _this.res.send({ status: 0, message: "Server Error" });
     }
   }
+
+  async updateUserProfileStepOne() {
+    var _this = this;
+    try {
+
+      var bodyData = _this.req.body;
+
+      var UserProfilesData = await Users.findByIdAndUpdate({ "_id": ObjectID(_this.req.user.userId) }, bodyData);
+
+      return _this.res.send({ status: 1, message: "Profile updated successfully" });
+
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "updateUserProfileStepOne",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async deleteProfileImage() {
+    var _this = this;
+    try {
+
+      var bodyData = _this.req.body;
+      console.log("bodyData", bodyData)
+      // if(bodyData.is_delete){
+      var filter = { "_id": ObjectID(bodyData.id), "user_id": ObjectID(_this.req.user.userId) }
+      var deletem = await UserImages.deleteOne(filter)
+      console.log("deletem", deletem, filter)
+      // }
+
+
+      return _this.res.send({ status: 1, message: "Image deleted successfully" });
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "deleteProfileImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async updateUserProfileStepTwo() {
+    var _this = this;
+    try {
+
+      var bodyData = _this.req.body;
+
+      // console.log("bodyData", bodyData)
+
+      var UserProfilesData = await UserProfiles.findOneAndUpdate({ "user_id": ObjectID(_this.req.user.userId) }, bodyData);
+
+      var newObj = {};
+
+      if (bodyData.user_dob || bodyData.user_gender) {
+
+        if (bodyData.user_dob) {
+          let birthYear = parseInt(bodyData.user_dob.split("-")[0]);
+          let currentYear = new Date().getFullYear();
+          let userAge = currentYear - birthYear;
+          console.log("userAge", userAge)
+          newObj['user_age'] = userAge
+        }
+
+        if (bodyData.user_gender) {
+          newObj['user_gender'] = bodyData.user_gender
+        }
+
+
+        await UserPreferances.findOneAndUpdate({ "user_id": ObjectID(_this.req.user.userId) }, newObj);
+      }
+
+      // console.log("UserProfilesData", UserProfilesData)
+
+      return _this.res.send({ status: 1, message: "Profile updated successfully" });
+
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "updateUserProfileStepTwo",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async updateUserProfileStepThree() {
+    var _this = this;
+    try {
+
+      var bodyData = _this.req.body;
+
+      var UserProfilesData = await UserPreferances.findOneAndUpdate({ "user_id": ObjectID(_this.req.user.userId) }, bodyData);
+
+      return _this.res.send({ status: 1, message: "Profile updated successfully" });
+
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "updateUserProfileStepTwo",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async setProfileImage() {
+    var _this = this;
+    try {
+
+      console.log('_this.req.body', _this.req.body)
+
+      // var img = await UserImages.updateMany({ "user_id": ObjectID(_this.req.user.userId) }, { "$set": { "is_profile_image": false } })
+
+      // var imgup = await UserImages.findByIdAndUpdate({ "_id": ObjectID(_this.req.body.id) }, { "is_profile_image": true, "image_order": 0 });
+
+      var UserProfilesData = await UserProfiles.findOneAndUpdate({ "user_id": ObjectID(_this.req.user.userId) }, { "user_profile": _this.req.body.image });
+
+      return _this.res.send({ status: 1, message: "Profile image has been set successfully" });
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "setProfileImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async sortImage() {
+    var _this = this;
+    try {
+
+      var bodyObj = _this.req.body;
+
+      console.log("bodyObj", bodyObj)
+      var userId = _this.req.user.userId;
+      var oldId = bodyObj.old_id;
+      var newId = bodyObj.new_id;
+      var imgup = await UserImages.findByIdAndUpdate({ "_id": ObjectID(oldId) }, { "image_order": bodyObj.new_order });
+      var imgup2 = await UserImages.findByIdAndUpdate({ "_id": ObjectID(newId) }, { "image_order": bodyObj.old_order });
+
+      var imagArr = await UserImages.find({ "user_id": ObjectID(userId), is_profile_image: false }).sort({ "image_order": 1 })
+
+      return _this.res.send({ status: 1, message: "Image updated successfully", data: imagArr });
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "sortImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async updateProfileImage() {
+    var _this = this;
+    try {
+      let form = new Form(_this.req);
+      let formObject = await form.parse();
+      _this.req.body = formObject.fields;
+
+
+      var imageObj = {}
+      // console.log("formObject/.files", formObject.files)
+      const file = new File(formObject.files['user_profile']);
+      // console.log("file", JSON.stringify(file))
+      let fileObject = await file.store("users_image");
+      var filepath = fileObject.filePartialPath;
+
+      var imgId = 0
+      if (_this.req.body.id && _this.req.body.id[0]) {
+        imgId = _this.req.body.id[0];
+      }
+      // console.log("imgId", _this.req.body, imgId)
+
+      var UserProfilesData = await UserProfiles.findOneAndUpdate({ "user_id": ObjectID(_this.req.user.userId) }, { "user_profile": filepath });
+
+      // var imgup = await UserImages.findByIdAndUpdate({ "_id": ObjectID(imgId) }, { "is_profile_image": true, "image_order": 0, "image_name": filepath });
+
+      return _this.res.send({ status: 1, message: "Profile image updated successfully" });
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "sortImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async updateRestImage() {
+    var _this = this;
+    try {
+      let form = new Form(_this.req);
+      let formObject = await form.parse();
+      _this.req.body = formObject.fields;
+      var userId = _this.req.user.userId;
+
+      var imageObj = {}
+      // console.log("formObject/.files", formObject.files)
+      const file = new File(formObject.files['user_profile']);
+      // console.log("file", JSON.stringify(file))
+      let fileObject = await file.store("users_image");
+      var filepath = fileObject.filePartialPath;
+      imageObj.image_name = filepath;
+      imageObj.user_id = userId;
+
+
+      var imgId = 0
+      if (_this.req.body.image_order && _this.req.body.image_order[0]) {
+        imageObj.image_order = _this.req.body.image_order[0];
+      }
+
+      imageObj.is_profile_image = false;
+
+      console.log("imageObj", imageObj)
+
+      const imageStore = await new Model(UserImages).store(imageObj);
+
+      var imagArr = await UserImages.find({ "user_id": ObjectID(userId), is_profile_image: false }).sort({ "image_order": 1 })
+      return _this.res.send({ status: 1, message: "Image uploaded successfully", data: imagArr });
+
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        finction_name: "updateRestImage",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
 }
 module.exports = UsersController;

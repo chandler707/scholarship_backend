@@ -54,9 +54,95 @@ module.exports = (app, express) => {
     }
   );
 
-  router.get("/get_user_profile", Globals.isAuthorised, (req, res, next) => {
+  router.post(
+    "/update_user_profile_step_one",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.updateUserProfileStepOne();
+    }
+  );
+
+  router.post(
+    "/update_user_profile_step_two",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.updateUserProfileStepTwo();
+    }
+  );
+
+  router.post(
+    "/update_user_profile_step_three",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.updateUserProfileStepThree();
+    }
+  );
+
+  router.post(
+    "/delete_profile_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.deleteProfileImage();
+    }
+  );
+
+  router.post(
+    "/upload_profile_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.uploadProfileImage();
+    }
+  );
+
+  router.post(
+    "/set_profile_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.setProfileImage();
+    }
+  );
+
+  router.post(
+    "/sort_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.sortImage();
+    }
+  );
+
+  router.post(
+    "/update_profile_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.updateProfileImage();
+    }
+  );
+
+  router.post(
+    "/update_rest_image",
+    Globals.isAuthorised,
+    (req, res, next) => {
+      const userObj = new UsersController().boot(req, res);
+      return userObj.updateRestImage();
+    }
+  );
+
+  router.post("/get_user_profile", Globals.isAuthorised, (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.getUserProfile(false);
+  });
+
+  router.post("/check_email_exist", (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.checkEmailExist();
   });
 
   router.post("/get_user_profile_by_id", (req, res, next) => {
@@ -133,7 +219,7 @@ module.exports = (app, express) => {
     return userObj.FindMatches();
   });
 
-  router.post("/add_date", Globals.isAuthorised, (req, res) => {
+  router.post("/create_date", Globals.isAuthorised, (req, res) => {
     const userObj = new UserDateController().boot(req, res);
     return userObj.AddUserDate();
   });
