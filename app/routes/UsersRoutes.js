@@ -224,9 +224,19 @@ module.exports = (app, express) => {
     return userObj.AddUserDate();
   });
 
+  router.post("/get_date_detail", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.getDateDetail();
+  });
+
   router.post("/get_date", Globals.isAuthorised, (req, res) => {
     const userObj = new UserDateController().boot(req, res);
     return userObj.GetUserDate();
+  });
+
+  router.post("/get_user_invitation", Globals.isAuthorised, (req, res) => {
+    const userObj = new UserDateController().boot(req, res);
+    return userObj.getUserInvitation();
   });
 
   router.post("/send_date_request", Globals.isAuthorised, (req, res) => {

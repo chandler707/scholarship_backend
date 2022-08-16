@@ -20,6 +20,7 @@ var dateDetailsSchema = new schema(
     },
     accepted_date: { type: Date, default: "" },
     is_accepted: { type: Boolean, default: false },
+    is_ignored: { type: Boolean, default: false },
     status: { type: Boolean, default: true },
   },
   {

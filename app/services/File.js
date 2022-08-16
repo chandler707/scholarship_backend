@@ -54,6 +54,7 @@ class File {
 
         let appDir = path.dirname(require.main.filename);
         var mainfile = this.file.file || this.file;
+        // console.log("mainfile", mainfile)
         if (_.isEmpty(mainfile)) reject("Please send file.");
         let fileName = "";
         var folderpath = folder ? "upload/" + folder : "upload";
@@ -69,7 +70,7 @@ class File {
         if (id) {
           new_name = id + "_user_" + Date.now().toString() + "." + ext[1];
         } else {
-          new_name = "/user_" + Date.now().toString() + "." + ext[1];
+          new_name = "user_" + Date.now().toString() + "." + ext[1];
         }
 
         let filePath = "/public/" + folderpath + "/" + new_name;

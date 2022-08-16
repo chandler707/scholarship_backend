@@ -2,13 +2,16 @@ const Model = require("../models/Model");
 const _ = require("lodash");
 let ObjectId = require("mongodb").ObjectID;
 var total_view = 0;
+const moment = require('moment');
+var todayDate = new Date(moment().format('YYYY-MM-DD') + 'T00:00:00.000Z');
+console.log("todayDate", todayDate)
 
 class Aggregation {
   constructor(collection) {
     this.collection = collection;
   }
 
-  matchedUserDetails(filter, skip, limit) {
+  matchedUserDetails(filter, skip, limit, userId) {
     return new Promise((resolve, reject) => {
       try {
         this.collection.aggregate(
@@ -24,7 +27,10 @@ class Aggregation {
                   {
                     $match: {
                       $expr: {
-                        $eq: ["$user_id", "$$userId"],
+                        $and: [
+                          { $eq: ["$user_id", "$$userId"] },
+                          { $gte: ["$dating_date", todayDate] },
+                        ],
                       },
                     },
                   },
@@ -79,16 +85,23 @@ class Aggregation {
                 from: "date_details",
                 let: { dateId: "$_id" },
                 pipeline: [
+                  // {
+                  //   $match: {
+                  //     $expr: {
+                  //       $eq: ["$date_id", "$$dateId"],
+                  //     },
+                  //   },
+                  // }
                   {
                     $match: {
                       $expr: {
-                        $eq: ["$date_id", "$$dateId"],
+                        $and: [
+                          { $eq: ["$date_id", "$$dateId"] },
+                          { $gte: ["$user_id", userId] },
+                        ],
                       },
                     },
                   },
-                  {
-                    $project: { "user_email": 1 }
-                  }
                 ],
                 as: "date_details",
               },

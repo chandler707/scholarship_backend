@@ -1096,7 +1096,7 @@ class UsersController extends Controller {
   async FindMatches() {
     let _this = this;
     try {
-      console.log("body", _this.req.body);
+      // console.log("body", _this.req.body);
       var bodyData = _this.req.body;
       var findUser = {}
 
@@ -1151,7 +1151,8 @@ class UsersController extends Controller {
       let list = await new Aggregation(UserPreferances).matchedUserDetails(
         filter,
         skip,
-        _this.req.body.pagesize
+        _this.req.body.pagesize,
+        userId
       );
       // console.log("list", list);
       return _this.res.send({ status: 1, total: list.length, data: list, page: bodyData.page , pagesize : bodyData.pagesize });
@@ -1999,6 +2000,10 @@ class UsersController extends Controller {
     try {
 
       var bodyData = _this.req.body;
+
+      if (!bodyData.id)
+        return _this.res.send({ status: 0, message: 'Please send proper data.' });
+
       console.log("bodyData", bodyData)
       // if(bodyData.is_delete){
       var filter = { "_id": ObjectID(bodyData.id), "user_id": ObjectID(_this.req.user.userId) }
@@ -2138,6 +2143,10 @@ class UsersController extends Controller {
       var userId = _this.req.user.userId;
       var oldId = bodyObj.old_id;
       var newId = bodyObj.new_id;
+
+      if (!oldId || !newId)
+        return _this.res.send({ status: 0, message: 'Please send proper data.' });
+
       var imgup = await UserImages.findByIdAndUpdate({ "_id": ObjectID(oldId) }, { "image_order": bodyObj.new_order });
       var imgup2 = await UserImages.findByIdAndUpdate({ "_id": ObjectID(newId) }, { "image_order": bodyObj.old_order });
 
