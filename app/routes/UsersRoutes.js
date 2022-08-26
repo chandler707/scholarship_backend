@@ -30,11 +30,11 @@ module.exports = (app, express) => {
     }
   );
 
-<<<<<<< HEAD
   router.post("/get_user_profile", (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.GetUserProfile();
-=======
+  });
+
   router.post(
     "/update_user_profile_step_one",
     Globals.isAuthorised,
@@ -80,23 +80,15 @@ module.exports = (app, express) => {
     }
   );
 
-  router.post(
-    "/set_profile_image",
-    Globals.isAuthorised,
-    (req, res, next) => {
-      const userObj = new UsersController().boot(req, res);
-      return userObj.setProfileImage();
-    }
-  );
+  router.post("/set_profile_image", Globals.isAuthorised, (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.setProfileImage();
+  });
 
-  router.post(
-    "/sort_image",
-    Globals.isAuthorised,
-    (req, res, next) => {
-      const userObj = new UsersController().boot(req, res);
-      return userObj.sortImage();
-    }
-  );
+  router.post("/sort_image", Globals.isAuthorised, (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.sortImage();
+  });
 
   router.post(
     "/update_profile_image",
@@ -107,14 +99,10 @@ module.exports = (app, express) => {
     }
   );
 
-  router.post(
-    "/update_rest_image",
-    Globals.isAuthorised,
-    (req, res, next) => {
-      const userObj = new UsersController().boot(req, res);
-      return userObj.updateRestImage();
-    }
-  );
+  router.post("/update_rest_image", Globals.isAuthorised, (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.updateRestImage();
+  });
 
   router.post("/get_user_profile", Globals.isAuthorised, (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
@@ -129,12 +117,6 @@ module.exports = (app, express) => {
   router.post("/get_user_profile_by_id", (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.getUserProfile(true);
-  });
-
-  router.post("/check_showktid_exist", (req, res, next) => {
-    const userObj = new UsersController().boot(req, res);
-    return userObj.checkShowktidExist();
->>>>>>> 5376a7b4716c23194663b26f86e3bc70a8fde5ab
   });
 
   router.post("/user_logout", (req, res, next) => {
@@ -156,41 +138,10 @@ module.exports = (app, express) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.AddCourse();
   });
-<<<<<<< HEAD
+
   router.post("/get_course", (req, res, next) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.GetCourse();
-=======
-
-  router.post("/create_date", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.AddUserDate();
-  });
-
-  router.post("/get_date_detail", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.getDateDetail();
-  });
-
-  router.post("/get_date", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.GetUserDate();
-  });
-
-  router.post("/get_user_invitation", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.getUserInvitation();
-  });
-
-  router.post("/send_date_request", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.sendDateRequest();
-  });
-
-  router.post("/accept_date_request", Globals.isAuthorised, (req, res) => {
-    const userObj = new UserDateController().boot(req, res);
-    return userObj.AcceptDateRequest();
->>>>>>> 5376a7b4716c23194663b26f86e3bc70a8fde5ab
   });
 
   app.use(process.env.BASE_API_URL, router);

@@ -72,18 +72,10 @@ class File {
           fileName = mainfile[0].originalFilename.split(".");
           var ext = re.exec(mainfile[0].originalFilename);
         }
-<<<<<<< HEAD
+
         console.log("ext**", ext, ext[0], ext[1]);
 
         new_name = `/${prefix}_` + Date.now().toString() + "." + ext[1];
-=======
-        // console.log("ext**", ext, ext[0], ext[1]);
-        if (id) {
-          new_name = id + "_user_" + Date.now().toString() + "." + ext[1];
-        } else {
-          new_name = "user_" + Date.now().toString() + "." + ext[1];
-        }
->>>>>>> 5376a7b4716c23194663b26f86e3bc70a8fde5ab
 
         let filePath = "/public/" + folderpath + "/" + new_name;
         console.log("filepath", filePath);
