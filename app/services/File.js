@@ -18,6 +18,7 @@ class File {
     this.file = file;
     this.location = location;
     this.filenewName = name;
+    console.log("jkasgdfjkasgd", this.file);
   }
 
   // Method to Generate file thumbnail
@@ -45,9 +46,10 @@ class File {
   }
 
   // Method to Store file
-  store(folder, id) {
+  store(folder, prefix) {
     var new_name = "";
     try {
+      console.log("filename");
       var re = /(?:\.([^.]+))?$/;
       return new Promise(async (resolve, reject) => {
         // Setting the path
@@ -56,23 +58,25 @@ class File {
         var mainfile = this.file.file || this.file;
         if (_.isEmpty(mainfile)) reject("Please send file.");
         let fileName = "";
+
         var folderpath = folder ? "upload/" + folder : "upload";
         // console.log("filenewName",this.file)
         if (this.filenewName) {
           fileName = this.filenewName.split(".");
+
           var ext = re.exec(this.filenewName);
         } else {
+          console.log("aall right", typeof mainfile);
+          // if(typeof mainfile!=Array)
           fileName = mainfile[0].originalFilename.split(".");
           var ext = re.exec(mainfile[0].originalFilename);
         }
         console.log("ext**", ext, ext[0], ext[1]);
-        if (id) {
-          new_name = id + "_user_" + Date.now().toString() + "." + ext[1];
-        } else {
-          new_name = "/user_" + Date.now().toString() + "." + ext[1];
-        }
+
+        new_name = `/${prefix}_` + Date.now().toString() + "." + ext[1];
 
         let filePath = "/public/" + folderpath + "/" + new_name;
+        console.log("filepath", filePath);
         let uploadedFilePath = appRoot + filePath;
 
         //**********************************************   AWS  ************************************************************ */
@@ -92,11 +96,18 @@ class File {
           filePartialPath: filePath,
           newName: new_name,
         };
+        console.log("fosfklsad", mainfile[0]);
+
         fs.readFile(mainfile[0].path, (err, data) => {
+          console.log("reading", mainfile[0].path);
           fs.writeFile(uploadedFilePath, data, (err) => {
+            console.log("wrinting", uploadedFilePath);
+
             if (err) {
+              console.log("inside error");
               return reject({ message: err, status: 0 });
             }
+            console.log("file pajdjhas", fileObject);
             return resolve(fileObject);
           });
         });
@@ -149,7 +160,8 @@ class File {
         if (_.isEmpty(newFilw)) reject("Please send file.");
         let fileName = "";
         var folderpath = folder ? "upload/" + folder : "upload";
-        // console.log("filenewName",this.file)
+        console.log("filenewName", this.filenewName);
+
         if (this.filenewName) {
           fileName = this.filenewName.split(".");
         } else {

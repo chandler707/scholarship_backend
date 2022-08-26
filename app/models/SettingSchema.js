@@ -1,16 +1,77 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
 var schema = mongoose.Schema;
 
-var settingSchema = new schema({
-    cdn_url : {type:String, default:""},
-    api_url : {type:String, default:""},
-    web_url : {type:String, default:""},
-},{
-    timestamps:true
-});
+var faqSchema = new schema(
+  {
+    question: { type: String, default: "" },
+    answer: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+var contactUsSchema = new schema(
+  {
+    contact_us: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+var aboutUsSchema = new schema(
+  {
+    about_us: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+var privacySchema = new schema(
+  {
+    privacy_policy: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+var workingPolicySchema = new schema(
+  {
+    working_policy: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+var termandconditionSchema = new schema(
+  {
+    term_and_condition: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-var Settings = mongoose.model('settings', settingSchema);
+var FAQ = mongoose.model("faq", faqSchema);
+var ContactUs = mongoose.model("contact_us", contactUsSchema);
+var AboutUs = mongoose.model("about_us", aboutUsSchema);
+var PrivacyPolicy = mongoose.model("privacy_policy", privacySchema);
+var WorkingPolicy = mongoose.model("working_policy", workingPolicySchema);
+var TermAndCondition = mongoose.model(
+  "term_and_condition",
+  termandconditionSchema
+);
 
 module.exports = {
-    Settings
-}
+  FAQ,
+  ContactUs,
+  AboutUs,
+  PrivacyPolicy,
+  TermAndCondition,
+  WorkingPolicy,
+};

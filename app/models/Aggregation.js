@@ -8,7 +8,7 @@ class Aggregation {
     this.collection = collection;
   }
 
-  matchedUserDetails(filter, skip, limit) {
+  getUniversityDetails(filter, skip, limit) {
     return new Promise((resolve, reject) => {
       try {
         this.collection.aggregate(
@@ -18,59 +18,22 @@ class Aggregation {
             },
             {
               $lookup: {
-                from: "users",
-                let: { userId: "$user_id" },
+                from: "university_details",
+                let: { userId: "$_id" },
                 pipeline: [
                   {
                     $match: {
                       $expr: {
-                        $eq: ["$_id", "$$userId"],
+                        $eq: ["$user_id", "$$userId"],
                       },
                     },
                   },
                 ],
-                as: "user_info",
+                as: "university_details",
               },
             },
             {
-              $unwind: "$user_info",
-            },
-            {
-              $lookup: {
-                from: "user_images",
-                let: { userId: "$user_id" },
-                pipeline: [
-                  {
-                    $match: {
-                      $expr: {
-                        $and: [
-                          { $eq: ["$_id", "$$userId"] },
-                          { $eq: ["$is_profile_image", true] },
-                        ],
-                      },
-                    },
-                  },
-                ],
-                as: "profile_picture",
-              },
-            },
-            {
-              $unwind: "$profile_picture",
-            },
-            {
-              $group: {
-                _id: "$user_id",
-                username: { $first: "$user_info.username" },
-                user_gender: { $first: "$user_gender" },
-                user_age: { $first: "$user_age" },
-                profile_picture: { $first: "$profile_picture.image_name" },
-              },
-            },
-            {
-              $skip: skip,
-            },
-            {
-              $limit: limit,
+              $unwind: "$university_details",
             },
           ],
           (err, data) => {

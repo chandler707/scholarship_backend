@@ -5,7 +5,6 @@ let Authentication = require("../app/models/AuthenticationSchema").Authtokens;
 let Users = require("../app/models/UserSchema").Users;
 let Model = require("../app/models/Model");
 const Errorlogs = require("../app/models/ErrorSchema").Errorlogs;
-const Emaillogs = require("../app/models/EmailSchema").Emaillogs;
 const guestToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmZTBkODU5ODExNTNiOWUwNWNiYjhmYyIsImFsZ29yaXRobSI6IkhTMjU2IiwiaWF0IjoxNjE0MjcxNDI5LCJleHAiOjg2NDAwMDg2NTYxNTEzNTUwMH0.xm57xoeEfryK9Qwn8_5jN2EORxO6xqjhptEpI02lCtQ";
 class Globals {
