@@ -2,6 +2,7 @@ var mongoose = require("mongoose");
 var schema = mongoose.Schema;
 var crypto = require("crypto");
 
+<<<<<<< HEAD
 var user = new schema(
   {
     email: { type: String, default: "" },
@@ -25,6 +26,17 @@ var user = new schema(
     marital_status: { type: String, default: "" },
     alternative_mobile: { type: Number, default: "" },
     profile_picture: { type: String, default: "" },
+=======
+var user = new schema({
+    username: { type: String, default: "" },
+    user_email: { type: String, default: "" },
+    user_password: { type: String, default: "" },    
+    role_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "roles",
+      index: true,
+    },
+>>>>>>> 5376a7b4716c23194663b26f86e3bc70a8fde5ab
     user_verificationStatus: { type: Boolean, default: false },
     user_status: { type: String, default: "inactive" },
     user_verificationToken: { type: String, default: "" },

@@ -75,6 +75,7 @@ module.exports = function() {
     // =======   Routing
 
     require('../app/routes/UsersRoutes')(app, express);
+    require('../app/routes/SponcersRoutes')(app, express);
     require('../app/routes/AdminRoutes')(app, express);
     return app;
     
