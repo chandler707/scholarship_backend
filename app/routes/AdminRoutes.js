@@ -156,6 +156,18 @@ module.exports = (app, express) => {
     const adminObj = new LocationController().boot(req, res);
     return adminObj.UpdateCountry();
   });
+  router.post("/add_state", (req, res, next) => {
+    const adminObj = new LocationController().boot(req, res);
+    return adminObj.AddState();
+  });
+  router.post("/get_state", (req, res, next) => {
+    const adminObj = new LocationController().boot(req, res);
+    return adminObj.GetState();
+  });
+  router.post("/update_state", (req, res, next) => {
+    const adminObj = new LocationController().boot(req, res);
+    return adminObj.UpdateState();
+  });
 
   router.post("/update_logo", (req, res, next) => {
     const adminObj = new Logo().boot(req, res);

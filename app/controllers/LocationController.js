@@ -290,11 +290,12 @@ class LocationController extends Controller {
           });
         }
       } else if (_this.req.body.country_id) {
-        let findByCountry = await Country.find({
+        console.log(_this.req.body);
+        let findByCountry = await State.find({
           country_id: ObjectID(_this.req.body.country_id),
           is_delete: false,
         });
-
+        console.log("coumntrie", findByCountry);
         if (findByCountry.length > 0) {
           return _this.res.send({
             status: 1,

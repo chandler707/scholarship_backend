@@ -112,7 +112,7 @@ class UsersController extends Controller {
       if (!_.isEmpty(isExist)) {
         return _this.res.send({
           status: 2,
-          message: "you is already registered ..please login",
+          message: "you are already registered ..please login",
         });
       } else {
         let dataObj = {};

@@ -43,6 +43,6 @@ io = require("socket.io")(server, options);
 ss = require("socket.io-stream");
 require("./configs/commonSocket")(app, io, ss);
 
-server.listen(process.env.PORT, () =>
-  console.log(`API running on localhost:${process.env.PORT}`)
+server.listen(process.env.PORT || process.env.SERVER_PORT, () =>
+  console.log(`API running on localhost:${process.env.SERVER_PORT}`)
 );
