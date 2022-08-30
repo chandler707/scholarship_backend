@@ -3,9 +3,7 @@ var schema = mongoose.Schema;
 
 var admin = new schema(
   {
-    fname: { type: String, default: "" },
-    lname: { type: String, default: "" },
-    username: { type: String, default: "" },
+    email: { type: String, default: "" },
     password: { type: String, default: "" },
   },
   {

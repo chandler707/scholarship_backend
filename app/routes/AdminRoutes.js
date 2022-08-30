@@ -1,3 +1,4 @@
+const { isAuthorised } = require("../../configs/Globals");
 const CourseController = require("../controllers/CourseController");
 
 module.exports = (app, express) => {
@@ -22,34 +23,15 @@ module.exports = (app, express) => {
     return adminObj.AdminRegister();
   });
 
-  router.post("/admin_profile", (req, res, next) => {
-    const adminObj = new AdminController().boot(req, res);
-    return adminObj.AdminProfile();
-  });
-
   router.post("/get_roles", (req, res, next) => {
     const adminObj = new RoleController().boot(req, res);
     return adminObj.GetRole();
-  });
-
-  router.post("/updateAdmin", Globals.isAuthorised, (req, res, next) => {
-    const adminObj = new AdminController().boot(req, res);
-    return adminObj.updateAdmin();
   });
 
   router.post("/edit_admin_profile", (req, res, next) => {
     const adminObj = new AdminController().boot(req, res);
     return adminObj.editProfile();
   });
-
-  router.post(
-    "/adminChangePassword",
-    Globals.isAuthorised,
-    (req, res, next) => {
-      const adminObj = new AdminController().boot(req, res);
-      return adminObj.changePassword();
-    }
-  );
 
   router.post("/get_user_data", Globals.isAuthorised, (req, res, next) => {
     const adminObj = new AdminController().boot(req, res);
@@ -66,19 +48,14 @@ module.exports = (app, express) => {
     return adminObj.addUserData();
   });
 
-  router.post("/admin_forgot_password", (req, res, next) => {
+  router.post("/get_admin_profile", isAuthorised, (req, res, next) => {
     const adminObj = new AdminController().boot(req, res);
-    return adminObj.forgotPasswordMailForAdmin();
+    return adminObj.AdminProfile();
   });
 
-  router.post("/resetPassword", (req, res, next) => {
+  router.post("/update_admin_profile", isAuthorised, (req, res, next) => {
     const adminObj = new AdminController().boot(req, res);
-    return adminObj.adminResetPassword();
-  });
-
-  router.post("/updatetolower", (req, res, next) => {
-    const adminObj = new AdminController().boot(req, res);
-    return adminObj.updatetolower();
+    return adminObj.updateAdminProfile();
   });
 
   router.post("/admin_send_noti", (req, res, next) => {
@@ -108,6 +85,12 @@ module.exports = (app, express) => {
     const adminObj = new AdminController().boot(req, res);
     return adminObj.UserList();
   });
+
+  router.post("/change_admin_password", isAuthorised, (req, res, next) => {
+    const adminObj = new AdminController().boot(req, res);
+    return adminObj.changePasswordAdmin();
+  });
+
   router.post("/get_university_profile", (req, res, next) => {
     const adminObj = new UserController().boot(req, res);
     return adminObj.GetUniversityProfile();

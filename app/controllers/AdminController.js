@@ -61,14 +61,14 @@ class AdminController extends Controller {
   async adminLogin() {
     let _this = this;
 
-    if (!this.req.body.email || !this.req.body.password)
-      return this.res.send({ status: 0, message: "Please send proper data." });
+    if (!_this.req.body.email || !_this.req.body.password)
+      return _this.res.send({ status: 0, message: "Please send proper data." });
 
     try {
-      let filter = { user_email: this.req.body.email };
+      let filter = { email: _this.req.body.email };
       const admin = await Admin.findOne(filter);
       if (_.isEmpty(admin))
-        return this.res.send({ status: 0, message: "Admin not found." });
+        return _this.res.send({ status: 0, message: "Admin not found." });
       const status = await bcrypt.compare(
         _this.req.body.password,
         admin.password
@@ -85,8 +85,6 @@ class AdminController extends Controller {
 
       let data = {
         _id: admin._id,
-        firstname: admin.fname,
-        lastname: admin.lname,
         email: admin.email,
       };
 
@@ -109,11 +107,107 @@ class AdminController extends Controller {
       return _this.res.send({ status: 0, message: "Server Error" });
     }
   }
+  async updateAdminProfile() {
+    let _this = this;
+    try {
+      if (!_this.req.body.email) {
+        return _this.res.send({
+          status: 0,
+          message: "please send proper data",
+        });
+      }
+      let adminId = _this.req.user.userId;
+      let update = await Admin.findByIdAndUpdate(
+        { _id: ObjectID(adminId) },
+        { email: _this.req.body.email },
+        { new: true }
+      );
+      if (_.isEmpty(update)) {
+        return _this.res.send({ status: 0, message: "error in updating data" });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "details updated successfully",
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "UpdateAdminProfile",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+  async changePasswordAdmin() {
+    let _this = this;
+    try {
+      if (!_this.req.body.old_password || !_this.req.body.new_password) {
+        return _this.res.send({
+          status: 0,
+          message: "please send old password and new password",
+        });
+      }
+      let adminDetails = await Admin.findOne();
+      let compareOldPass = await bcrypt.compare(
+        _this.req.body.old_password,
+        adminDetails.password
+      );
+
+      if (!compareOldPass) {
+        return _this.res.send({
+          status: 0,
+          message: "entered old password is wrong",
+        });
+      } else {
+        let hashPass = await bcrypt.hash(_this.req.body.new_password, 10);
+        let updatePass = await Admin.findByIdAndUpdate(
+          {
+            _id: ObjectID(_this.req.user.userId),
+          },
+          { password: hashPass },
+          { new: true }
+        );
+        if (_.isEmpty(updatePass)) {
+          return _this.res.send({
+            status: 0,
+            message: "error in changing password",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "password changed successfully",
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "changePasswordAdmin",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
 
   async AdminProfile() {
     let _this = this;
     try {
-      const admin = await Admin.findOne({});
+      console.log("user id", _this.req.user.userId);
+      const admin = await Admin.findOne({
+        _id: ObjectID(_this.req.user.userId),
+      });
       console.log(admin);
       if (_.isEmpty(admin))
         return _this.res.send({ status: 0, message: "Admin not found" });
@@ -430,47 +524,6 @@ class AdminController extends Controller {
       };
       globalObj.addErrorLogInDB(dataErrorObj);
       return _this.res.send({ status: 0, message: "Server Error" });
-    }
-  }
-
-  async adminResetPassword() {
-    let _this = this;
-
-    try {
-      if (!this.req.body.token || !this.req.body.confirmPassword)
-        return _this.res.send({ status: 0, message: "Token does not exists" });
-      let user = await new Model(Users).findOne({
-        forgotToken: this.req.body.token,
-      });
-      //console.log("user", user[0]._id);
-      if (_.isEmpty(user))
-        return _this.res.send({ status: 0, message: "Invalid token" });
-
-      let password = bcrypt.hashSync(_this.req.body.confirmPassword, 10);
-      const updatedUser = await Users.findByIdAndUpdate(
-        user[0]._id,
-        { password: password, forgotToken: "" },
-        { new: true }
-      );
-      if (_.isEmpty(updatedUser))
-        return _this.res.send({ status: 0, message: "password not updated." });
-
-      _this.res.send({ status: 1, message: "Password change successfully." });
-    } catch (error) {
-      let globalObj = new Globals();
-      var dataErrorObj = {
-        is_from: "API Error",
-        api_name: "admin Route Api",
-        function_name: "adminResetPassword",
-        error_title: error.name,
-        description: error.message,
-      };
-      globalObj.addErrorLogInDB(dataErrorObj);
-      return _this.res.send({
-        status: 0,
-        message: "Server Error",
-        data: user[0]._id,
-      });
     }
   }
 
@@ -1043,7 +1096,7 @@ class AdminController extends Controller {
     let _this = this;
     try {
       console.log(this.req.body);
-      let filter = { is_delete: false};
+      let filter = { is_delete: false };
       if (!_this.req.body.page || !_this.req.body.pagesize) {
         return this.res.send({
           status: 0,
@@ -1056,17 +1109,15 @@ class AdminController extends Controller {
 
       if (_this.req.body.is_student) {
         filter["user_type"] = "student";
-        filter["is_approved"]=true
+        filter["is_approved"] = true;
       }
       if (_this.req.body.is_university) {
         filter["user_type"] = "university";
-        filter["is_approved"]=true
-
+        filter["is_approved"] = true;
       }
       if (_this.req.body.for_approval) {
         filter["user_type"] = "university";
-        filter["is_approved"]=false
-
+        filter["is_approved"] = false;
       }
       let userList = await Users.find(filter)
         .sort(sort)
@@ -1114,7 +1165,7 @@ class AdminController extends Controller {
         });
       }
 
-      if(_this.req.body.is_verify){
+      if (_this.req.body.is_verify) {
         let verifyUser = await Users.findByIdAndUpdate(
           {
             _id: _this.req.body.user_id,

@@ -8,6 +8,7 @@ const Model = require("../models/Model");
 const Globals = require("../../configs/Globals");
 let Form = require("../services/Form");
 let File = require("../services/File");
+let Email = require("../services/Email");
 var randomstring = require("randomstring");
 const moment = require("moment");
 const Aggregation = require("../models/Aggregation");
@@ -653,6 +654,122 @@ class UsersController extends Controller {
       };
       globalObj.addErrorLogInDB(dataErrorObj);
       return _this.res.send({ status: 0, message: lang.server_error });
+    }
+  }
+
+  async UserForgorPassword() {
+    let _this = this;
+    try {
+      if (!_this.req.body.email) {
+        return _this.res.send({ status: 0, message: "please send mail id" });
+      }
+
+      let checkUser = await Users.findOne({
+        email: _this.req.body.email,
+        is_delete: false,
+        is_block: false,
+      });
+
+      if (_.isEmpty(checkUser)) {
+        return _this.res.send({ status: 0, message: "accound not found" });
+      } else {
+        let emailObj = new Email();
+        let getPass = await emailObj.sendForgetPasswordMail(checkUser.email);
+        if (!getPass) {
+          return _this.res.send({
+            status: 0,
+            message: "error in forgot password",
+          });
+        }
+        let hashPass = await bcrypt.hash(getPass, 10);
+        let updatePass = await Users.findByIdAndUpdate(
+          { _id: checkUser._id },
+          { password: hashPass },
+          { new: true }
+        );
+
+        if (!updatePass) {
+          return _this.res.send({
+            status: 0,
+            message: "error in updateing new passord",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "check email for new password",
+          });
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        function_name: "forgot password",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "server error" });
+    }
+  }
+
+  async UserChanegPassword() {
+    let _this = this;
+    try {
+      if (!_this.req.body.old_password || !_this.req.body.new_password) {
+        return _this.res.send({
+          status: 0,
+          message: "please send old password and new password",
+        });
+      }
+      let userDetails = await Users.findOne({
+        _id: ObjectID(_this.req.user.userId),
+      });
+      let compareOldPass = await bcrypt.compare(
+        _this.req.body.old_password,
+        adminDetails.password
+      );
+
+      if (!compareOldPass) {
+        return _this.res.send({
+          status: 0,
+          message: "entered old password is wrong",
+        });
+      } else {
+        let hashPass = await bcrypt.hash(_this.req.body.new_password, 10);
+        let updatePass = await Users.findByIdAndUpdate(
+          {
+            _id: ObjectID(_this.req.user.userId),
+          },
+          { password: hashPass },
+          { new: true }
+        );
+        if (_.isEmpty(updatePass)) {
+          return _this.res.send({
+            status: 0,
+            message: "error in changing password",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "password changed successfully",
+          });
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "User Route Api",
+        function_name: "change password",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "server error" });
     }
   }
 }

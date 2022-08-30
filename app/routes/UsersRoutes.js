@@ -134,6 +134,14 @@ module.exports = (app, express) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.UserSignIn();
   });
+  router.post("/forgot_password", (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.UserForgorPassword();
+  });
+  router.post("/change_password", (req, res, next) => {
+    const userObj = new UsersController().boot(req, res);
+    return userObj.UserChanegPassword();
+  });
   router.post("/add_course", isAuthorised, (req, res, next) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.AddCourse();
