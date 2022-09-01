@@ -292,7 +292,7 @@ class LocationController extends Controller {
       } else if (_this.req.body.country_id) {
         console.log(_this.req.body);
         let findByCountry = await State.find({
-          country_id: ObjectID(_this.req.body.country_id),
+          country_id: _this.req.body.country_id,
           is_delete: false,
         });
         console.log("coumntrie", findByCountry);

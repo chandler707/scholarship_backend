@@ -46,6 +46,8 @@ class UsersController extends Controller {
       filter = {
         email: loginData.email.trim(),
         user_type: loginData.user_type,
+        is_delete: false,
+        is_block: false,
       };
       let user = await Users.findOne(filter).lean();
 
@@ -215,77 +217,52 @@ class UsersController extends Controller {
     try {
       let form = new Form(_this.req);
       let formObject = await form.parse();
-      _this.req.body = formObject.fields;
+      _this.req.body = JSON.parse(formObject.fields.data[0]);
+
       var dataObj = {};
       if (_this.req.body.is_student) {
-        if (_this.req.body.name && _this.req.body.name[0].trim().length > 0) {
-          dataObj["name"] = _this.req.body.name[0].trim();
+        if (_this.req.body.name) {
+          dataObj["name"] = _this.req.body.name.trim();
         }
-        if (_this.req.body.mobile && _this.req.body.mobile[0].length > 0) {
-          dataObj["mobile"] = _this.req.body.mobile[0];
+        if (_this.req.body.mobile) {
+          dataObj["mobile"] = _this.req.body.mobile;
         }
-        if (
-          _this.req.body.father_name &&
-          _this.req.body.father_name[0].trim().length > 0
-        ) {
-          dataObj["father_name"] = _this.req.body.father_name[0].trim();
+        if (_this.req.body.father_name) {
+          dataObj["father_name"] = _this.req.body.father_name.trim();
         }
 
-        if (
-          _this.req.body.first_language &&
-          _this.req.body.first_language[0].trim().length > 0
-        ) {
-          dataObj["first_language"] = _this.req.body.first_language[0].trim();
+        if (_this.req.body.first_language) {
+          dataObj["first_language"] = _this.req.body.first_language;
         }
-        if (_this.req.body.dob && _this.req.body.dob[0].length > 0) {
-          dataObj["dob"] = _this.req.body.dob[0];
+        if (_this.req.body.dob) {
+          dataObj["dob"] = _this.req.body.dob;
         }
-        if (_this.req.body.gender && _this.req.body.gender[0].length > 0) {
-          dataObj["gender"] = _this.req.body.gender[0];
+        if (_this.req.body.gender) {
+          dataObj["gender"] = _this.req.body.gender;
         }
-        if (
-          _this.req.body.citizenship_country &&
-          _this.req.body.citizenship_country[0].length > 0
-        ) {
-          dataObj["citizenship_country"] =
-            _this.req.body.citizenship_country[0];
+        if (_this.req.body.citizenship_country) {
+          dataObj["citizenship_country"] = _this.req.body.citizenship_country;
         }
-        if (
-          _this.req.body.passport_number &&
-          _this.req.body.passport_number[0].trim().length > 0
-        ) {
-          dataObj["passport_number"] = _this.req.body.passport_number[0].trim();
+        if (_this.req.body.passport_number) {
+          dataObj["passport_number"] = _this.req.body.passport_number.trim();
         }
-        if (
-          _this.req.body.marital_status &&
-          _this.req.body.marital_status[0].length > 0
-        ) {
-          dataObj["marital_status"] = _this.req.body.marital_status[0];
+        if (_this.req.body.marital_status) {
+          dataObj["marital_status"] = _this.req.body.marital_status;
         }
-        if (
-          _this.req.body.address &&
-          _this.req.body.address[0].trim().length > 0
-        ) {
-          dataObj["address"] = _this.req.body.address[0].trim();
+        if (_this.req.body.address) {
+          dataObj["address"] = _this.req.body.address.trim();
         }
-        if (_this.req.body.country && _this.req.body.country[0].length > 0) {
-          dataObj["country"] = _this.req.body.country[0];
+        if (_this.req.body.country) {
+          dataObj["country"] = _this.req.body.country;
         }
-        if (_this.req.body.state && _this.req.body.state[0].length > 0) {
-          dataObj["state"] = _this.req.body.state[0];
+        if (_this.req.body.state) {
+          dataObj["state"] = _this.req.body.state;
         }
-        if (
-          _this.req.body.pincode &&
-          _this.req.body.pincode[0].trim().length > 0
-        ) {
-          dataObj["pincode"] = _this.req.body.pincode[0].trim();
+        if (_this.req.body.pincode) {
+          dataObj["pincode"] = _this.req.body.pincode;
         }
-        if (
-          _this.req.body.alternative_mobile &&
-          _this.req.body.alternative_mobile[0].trim().length > 0
-        ) {
-          dataObj["alternative_mobile"] =
-            _this.req.body.alternative_mobile[0].trim();
+        if (_this.req.body.alternative_mobile) {
+          dataObj["alternative_mobile"] = _this.req.body.alternative_mobile;
         }
 
         if (formObject.files.file) {
@@ -332,6 +309,7 @@ class UsersController extends Controller {
           dataObj.user_photo || "/public/no-image-user.png";
       }
       let userId = ObjectID(_this.req.user.userId);
+      console.log(dataObj);
 
       const updatedUser = await Users.findByIdAndUpdate(userId, dataObj, {
         new: true,
@@ -539,13 +517,17 @@ class UsersController extends Controller {
   async GetUserProfile() {
     let _this = this;
     try {
-      if (!_this.req.body.user_id) {
+      console.log("profile", _this.req.user.userId);
+      if (!_this.req.user.userId) {
         return _this.res.send({ status: 0, message: "please send user id" });
       }
 
       let profile = await Users.findOne({
-        _id: ObjectID(_this.req.body.user_id),
+        _id: ObjectID(_this.req.user.userId),
+        is_delete: false,
+        is_block: false,
       }).lean();
+      console.log("ooo", profile);
 
       if (_.isEmpty(profile)) {
         return _this.req.send({ status: 0, message: "user does not found" });

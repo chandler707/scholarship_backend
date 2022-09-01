@@ -30,7 +30,7 @@ module.exports = (app, express) => {
     }
   );
 
-  router.post("/get_user_profile", (req, res, next) => {
+  router.post("/get_user_profile", isAuthorised, (req, res, next) => {
     const userObj = new UsersController().boot(req, res);
     return userObj.GetUserProfile();
   });
