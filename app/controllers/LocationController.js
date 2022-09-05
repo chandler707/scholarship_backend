@@ -6,6 +6,8 @@ const Model = require("../models/Model");
 const Globals = require("../../configs/Globals");
 const State = require("../models/LocationSchema").State;
 const Country = require("../models/LocationSchema").Country;
+const StudentCountry = require("../models/StudentLocation").StudentCountry;
+const StudentStates = require("../models/StudentLocation").StudentState;
 
 class LocationController extends Controller {
   constructor() {
@@ -398,6 +400,74 @@ class LocationController extends Controller {
         is_from: "API Error",
         api_name: "admin route Api",
         function_name: "UpdateState",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async GetStudentCountry() {
+    let _this = this;
+    try {
+      let countryList = await StudentCountry.find({ is_delete: false });
+      if (countryList.length > 0) {
+        return _this.res.send({
+          status: 1,
+          message: "country list returned",
+          data: countryList,
+        });
+      } else {
+        return _this.res.send({
+          status: 1,
+
+          data: [],
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "GetStudentcountry",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async GetStudentState() {
+    let _this = this;
+    try {
+      let findByCountry = await StudentStates.find({
+        countryCode: _this.req.body.countryCode,
+        is_delete: false,
+      });
+      console.log("coumntrie", findByCountry);
+      if (findByCountry.length > 0) {
+        return _this.res.send({
+          status: 1,
+          message: "state returned by country",
+          data: findByCountry,
+        });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "state list is empty",
+          data: [],
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "GetState",
         error_title: error.name,
         description: error.message,
       };

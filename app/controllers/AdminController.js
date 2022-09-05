@@ -1119,6 +1119,17 @@ class AdminController extends Controller {
         filter["user_type"] = "university";
         filter["is_approved"] = false;
       }
+      if (_this.req.body.filter_by === "country") {
+        if (!_this.req.body.country_id)
+          return _this.res.send({
+            status: 0,
+            message: "please send country id",
+          });
+        filter["user_type"] = "university";
+        filter["is_approved"] = true;
+        filter["country"] = ObjectID(_this.req.body.country_id);
+      }
+      console.log(filter);
       let userList = await Users.find(filter)
         .sort(sort)
         .skip(skip)

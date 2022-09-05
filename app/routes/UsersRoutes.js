@@ -5,6 +5,7 @@ module.exports = (app, express) => {
   const Globals = require("../../configs/Globals");
   const UsersController = require("../controllers/UsersController");
   const CourseController = require("../controllers/CourseController");
+  const LocationController = require("../controllers/LocationController");
   router.post(
     "/update_user_profile",
     Globals.isAuthorised,
@@ -150,6 +151,14 @@ module.exports = (app, express) => {
   router.post("/get_course", (req, res, next) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.GetCourse();
+  });
+  router.post("/student_country", (req, res, next) => {
+    const userObj = new LocationController().boot(req, res);
+    return userObj.GetStudentCountry();
+  });
+  router.post("/student_state", (req, res, next) => {
+    const userObj = new LocationController().boot(req, res);
+    return userObj.GetStudentState();
   });
 
   app.use(process.env.BASE_API_URL, router);

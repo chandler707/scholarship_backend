@@ -27,7 +27,6 @@ class UsersController extends Controller {
   }
 
   async UserSignIn() {
-    console.log("hit");
     let _this = this;
     var filter = {};
     try {
@@ -218,6 +217,7 @@ class UsersController extends Controller {
       let form = new Form(_this.req);
       let formObject = await form.parse();
       _this.req.body = JSON.parse(formObject.fields.data[0]);
+      console.log(formObject.files);
 
       var dataObj = {};
       if (_this.req.body.is_student) {
@@ -345,32 +345,36 @@ class UsersController extends Controller {
       let bodyData = _this.req.body;
       let dataObj = {};
       if (bodyData.education_detail) {
-        if (bodyData.highest_education) {
-          dataObj["highest_education"] = bodyData.highest_education.trim();
+        console.log(bodyData);
+        if (bodyData.education_data.highest_education) {
+          dataObj["highest_education"] =
+            bodyData.education_data.highest_education;
         }
-        if (bodyData.country_of_education) {
-          dataObj["country_of_education"] = bodyData.country_of_education;
+        if (bodyData.education_data.country_of_education) {
+          dataObj["country_of_education"] =
+            bodyData.education_data.country_of_education;
         }
-        if (bodyData.grade_average) {
-          dataObj["grade_average"] = bodyData.grade_average;
+        if (bodyData.education_data.grade_average) {
+          dataObj["grade_average"] = bodyData.education_data.grade_average;
         }
-        if (bodyData.school_start) {
-          dataObj["school_start"] = bodyData.school_start;
+        if (bodyData.education_data.school_start) {
+          dataObj["school_start"] = bodyData.education_data.school_start;
         }
-        if (bodyData.school_end) {
-          dataObj["school_end"] = bodyData.school_end;
+        if (bodyData.education_data.school_end) {
+          dataObj["school_end"] = bodyData.education_data.school_end;
         }
-        if (bodyData.school_country) {
-          dataObj["school_country"] = bodyData.school_country;
+        if (bodyData.education_data.school_country) {
+          dataObj["school_country"] = bodyData.education_data.school_country;
         }
-        if (bodyData.school_state) {
-          dataObj["school_state"] = bodyData.school_state;
+        if (bodyData.education_data.school_state) {
+          dataObj["school_state"] = bodyData.education_data.school_state;
         }
-        if (bodyData.school_address) {
-          dataObj["school_address"] = bodyData.school_address.trim();
+        if (bodyData.education_data.school_address) {
+          dataObj["school_address"] =
+            bodyData.education_data.school_address.trim();
         }
-        if (bodyData.school_zip) {
-          dataObj["school_zip"] = bodyData.school_zip;
+        if (bodyData.education_data.school_zip) {
+          dataObj["school_zip"] = bodyData.education_data.school_zip;
         }
         console.log("hit");
 
@@ -394,26 +398,26 @@ class UsersController extends Controller {
         }
       }
       if (bodyData.test_score) {
-        if (bodyData.test_name) {
-          dataObj["test_name"] = bodyData.test_name.trim();
+        if (bodyData.test_data.test_name) {
+          dataObj["test_name"] = bodyData.test_data.test_name;
         }
-        if (bodyData.test_date) {
-          dataObj["test_date"] = bodyData.test_date;
+        if (bodyData.test_data.test_date) {
+          dataObj["test_date"] = bodyData.test_data.test_date;
         }
-        if (bodyData.reading_score) {
-          dataObj["reading_score"] = bodyData.reading_score;
+        if (bodyData.test_data.reading_score) {
+          dataObj["reading_score"] = bodyData.test_data.reading_score;
         }
-        if (bodyData.lisning_score) {
-          dataObj["lisning_score"] = bodyData.lisning_score;
+        if (bodyData.test_data.lisning_score) {
+          dataObj["lisning_score"] = bodyData.test_data.lisning_score;
         }
-        if (bodyData.writing_score) {
-          dataObj["writing_score"] = bodyData.writing_score;
+        if (bodyData.test_data.writing_score) {
+          dataObj["writing_score"] = bodyData.test_data.writing_score;
         }
-        if (bodyData.speaking_score) {
-          dataObj["speaking_score"] = bodyData.speaking_score;
+        if (bodyData.test_data.speaking_score) {
+          dataObj["speaking_score"] = bodyData.test_data.speaking_score;
         }
-        if (bodyData.overall) {
-          dataObj["overall"] = bodyData.overall;
+        if (bodyData.test_data.overall) {
+          dataObj["overall"] = bodyData.test_data.overall;
         }
 
         let updateTest = await TestScore.updateOne(
@@ -566,14 +570,16 @@ class UsersController extends Controller {
   async GetUniversityProfile() {
     let _this = this;
     try {
-      if (!_this.req.body.user_id) {
-        return _this.res.send({ status: 0, message: "please send user id" });
+      let filter = { is_delete: false, user_type: "university" };
+      if (_this.req.body.country_id) {
+        filter["country_id"] = ObjectID(_this.req.body.country_id);
+      } else {
+        if (!_this.req.body.user_id) {
+          return _this.res.send({ status: 0, message: "please send user id" });
+        }
+        filter["_id"] = ObjectID(_this.req.body.user_id);
       }
-      let filter = {
-        _id: ObjectID(_this.req.body.user_id),
-        user_type: "university",
-        is_delete: false,
-      };
+
       console.log(filter);
       let profile = await new Aggregation(Users).getUniversityDetails(filter);
       // console.log(profile);

@@ -259,6 +259,37 @@ class AttributesController extends Controller {
           });
         }
       }
+      if (_this.req.body.is_front) {
+        let findId = await Attribute.findOne({
+          attribute: _this.req.body.attribute,
+          is_delete: false,
+        });
+        if (!_.isEmpty(findId)) {
+          let findVal = await AttributeValue.find({
+            attribute_id: ObjectID(findId._id),
+            is_delete: false,
+          });
+          if (findVal.length > 0) {
+            return _this.res.send({
+              status: 1,
+              message: "data success",
+              data: findVal,
+            });
+          } else {
+            return _this.res.send({
+              status: 0,
+              message: "nothing found",
+              data: [],
+            });
+          }
+        } else {
+          return _this.res.send({
+            status: 0,
+            message: "nothing found",
+            data: [],
+          });
+        }
+      }
       if (!_this.req.body.attribute_value_id) {
         if (!_this.req.body.page || !_this.req.body.pagesize) {
           return this.res.send({

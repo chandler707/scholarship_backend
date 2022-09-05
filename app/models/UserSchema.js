@@ -14,7 +14,11 @@ var user = new schema(
     city: { type: String, default: "" },
     state: { type: String, default: "" },
     is_approved: { type: Boolean, default: false },
-    country: { type: String, default: "" },
+    country: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "countries",
+      index: true,
+    },
     pincode: { type: Number, default: "" },
     father_name: { type: String, default: "" },
     first_language: { type: String, default: "" },
