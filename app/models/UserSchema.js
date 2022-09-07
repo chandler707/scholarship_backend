@@ -12,11 +12,16 @@ var user = new schema(
     user_type: { type: String, default: "" },
     address: { type: String, default: "" },
     city: { type: String, default: "" },
-    state: { type: String, default: "" },
+
     is_approved: { type: Boolean, default: false },
     country: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "countries",
+      ref: "student_countries",
+      index: true,
+    },
+    state: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "student_states",
       index: true,
     },
     pincode: { type: Number, default: "" },

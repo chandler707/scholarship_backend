@@ -24,6 +24,7 @@
     "helmet": "^3.22.0",
     "http": "0.0.1-security",
     "http-errors": "~1.6.2",
+    "http-proxy": "^1.18.1",
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",

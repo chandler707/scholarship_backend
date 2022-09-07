@@ -575,9 +575,10 @@ class UsersController extends Controller {
         filter["country_id"] = ObjectID(_this.req.body.country_id);
       } else {
         if (!_this.req.body.user_id) {
-          return _this.res.send({ status: 0, message: "please send user id" });
+          filter["_id"] = ObjectID(_this.req.user.userId);
+        } else {
+          filter["_id"] = ObjectID(_this.req.body.user_id);
         }
-        filter["_id"] = ObjectID(_this.req.body.user_id);
       }
 
       console.log(filter);

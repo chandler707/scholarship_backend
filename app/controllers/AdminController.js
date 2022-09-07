@@ -12,6 +12,7 @@ const Authtokens = require("../models/AuthenticationSchema").Authtokens;
 let Form = require("../services/Form");
 let File = require("../services/File");
 const fs = require("fs");
+const GuestUser = require("../models/GuestUser").GuestUser;
 
 class AdminController extends Controller {
   constructor() {
@@ -1133,7 +1134,10 @@ class AdminController extends Controller {
       let userList = await Users.find(filter)
         .sort(sort)
         .skip(skip)
-        .limit(_this.req.body.pagesize);
+        .limit(_this.req.body.pagesize)
+        .populate("country")
+        .populate("state");
+      console.log(userList);
       let count = await Users.countDocuments(filter);
       if (userList.length > 0) {
         _this.res.send({
@@ -1324,6 +1328,132 @@ class AdminController extends Controller {
       };
       globalObj.addErrorLogInDB(dataErrorObj);
       return _this.res.send({ status: 0, message: "server error" });
+    }
+  }
+
+  async AddGuestUser() {
+    let _this = this;
+    try {
+      let dataObj = {};
+      let bodyData = _this.req.body;
+      if (bodyData.email) {
+        dataObj["email"] = bodyData.email;
+      }
+      if (bodyData.name) {
+        dataObj["name"] = bodyData.name;
+      }
+      if (bodyData.mobile) {
+        dataObj["mobile"] = bodyData.mobile;
+      }
+      if (bodyData.type) {
+        dataObj["type"] = bodyData.type;
+      }
+
+      let saveData = await new Model(GuestUser).store(dataObj);
+      if (_.isEmpty(saveData)) {
+        return _this.res.send({ status: 0, message: "error in saving data" });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "data saved successfully",
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "Admin Route Api",
+        function_name: "Add guest user",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+  async GetGuestUser() {
+    let _this = this;
+    try {
+      if (!_this.req.body.page || !_this.req.body.pagesize) {
+        return this.res.send({
+          status: 0,
+          message: "Please send proper data.",
+        });
+      }
+
+      let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
+      let sort = { createdAt: 1 };
+
+      let getUser = await GuestUser.find({ is_delete: false })
+        .sort(sort)
+        .skip(skip)
+        .limit(_this.req.body.pagesize);
+      let count = await GuestUser.countDocuments({ is_delete: false });
+      if (getUser.length > 0) {
+        return _this.res.send({
+          status: 1,
+          message: "all guest users returned successfully",
+          data: getUser,
+          count: count,
+        });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "guest user list is empty",
+          data: [],
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "Admin Route Api",
+        function_name: "Get guest user",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+  async deleteGuestUser() {
+    let _this = this;
+    try {
+      let deleteUser = await GuestUser.findByIdAndUpdate(
+        {
+          _id: ObjectID(_this.req.body.guest_id),
+        },
+        {
+          is_delete: true,
+        },
+        { new: true }
+      );
+      if (_.isEmpty(deleteUser)) {
+        return _this.res.send({
+          status: 0,
+          message: "error in deleting data",
+          data: deleteUser,
+        });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "guest user deleted successfully",
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "Admin Route Api",
+        function_name: "Delete guest user",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
     }
   }
 }

@@ -38,7 +38,58 @@ class Aggregation {
               },
             },
             {
-              $unwind: "$university_details",
+              $unwind: {
+                path: "$university_details",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: "student_countries",
+                let: { userId: "$country" },
+
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [{ $eq: ["$_id", "$$userId"] }],
+                      },
+                    },
+                  },
+                ],
+
+                as: "country_detail",
+              },
+            },
+            {
+              $unwind: {
+                path: "$country_detail",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: "student_states",
+                let: { userId: "$state" },
+
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [{ $eq: ["$_id", "$$userId"] }],
+                      },
+                    },
+                  },
+                ],
+
+                as: "state_detail",
+              },
+            },
+            {
+              $unwind: {
+                path: "$state_detail",
+                preserveNullAndEmptyArrays: true,
+              },
             },
           ],
           (err, data) => {

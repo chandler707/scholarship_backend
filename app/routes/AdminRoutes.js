@@ -91,7 +91,7 @@ module.exports = (app, express) => {
     return adminObj.changePasswordAdmin();
   });
 
-  router.post("/get_university_profile", (req, res, next) => {
+  router.post("/get_university_profile", isAuthorised, (req, res, next) => {
     const adminObj = new UserController().boot(req, res);
     return adminObj.GetUniversityProfile();
   });
@@ -345,6 +345,18 @@ module.exports = (app, express) => {
   router.post("/update_description", (req, res, next) => {
     const adminObj = new CourseController().boot(req, res);
     return adminObj.UpdateDescription();
+  });
+  router.post("/add_guest_user", (req, res, next) => {
+    const adminObj = new AdminController().boot(req, res);
+    return adminObj.AddGuestUser();
+  });
+  router.post("/get_guest_user", (req, res, next) => {
+    const adminObj = new AdminController().boot(req, res);
+    return adminObj.GetGuestUser();
+  });
+  router.post("/delete_guest_user", (req, res, next) => {
+    const adminObj = new AdminController().boot(req, res);
+    return adminObj.deleteGuestUser();
   });
 
   app.use(process.env.BASE_API_URL, router);
