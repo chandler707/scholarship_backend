@@ -276,27 +276,26 @@ class UsersController extends Controller {
       }
 
       if (_this.req.body.is_university) {
-        if (_this.req.body.name && _this.req.body.name[0].trim().length > 0) {
-          dataObj["name"] = _this.req.body.name[0].trim();
+        if (_this.req.body.name) {
+          dataObj["name"] = _this.req.body.name.trim();
         }
-        if (
-          _this.req.body.mobile &&
-          _this.req.body.mobile[0].trim().length > 0
-        ) {
-          dataObj["mobile"] = _this.req.body.mobile[0].trim();
+        if (_this.req.body.mobile) {
+          dataObj["mobile"] = _this.req.body.mobile;
         }
-
-        if (_this.req.body.country && _this.req.body.country[0].length > 0) {
-          dataObj["country"] = _this.req.body.country[0];
+        if (_this.req.body.country) {
+          dataObj["country"] = _this.req.body.country;
         }
-        if (_this.req.body.state && _this.req.body.state[0].length > 0) {
-          dataObj["state"] = _this.req.body.state[0];
+        if (_this.req.body.state) {
+          dataObj["state"] = _this.req.body.state;
         }
-        if (
-          _this.req.body.official_website &&
-          _this.req.body.official_website[0].length > 0
-        ) {
-          dataObj["official_website"] = _this.req.body.official_website[0];
+        if (_this.req.body.address) {
+          dataObj["address"] = _this.req.body.address;
+        }
+        if (_this.req.body.pincode) {
+          dataObj["pincode"] = _this.req.body.pincode;
+        }
+        if (_this.req.body.official_website) {
+          dataObj["official_website"] = _this.req.body.official_website;
         }
 
         if (formObject.files.file) {
@@ -458,6 +457,7 @@ class UsersController extends Controller {
     let _this = this;
     try {
       let bodyData = _this.req.body;
+      console.log(bodyData);
       let dataObj = {};
 
       if (bodyData.university_type) {
@@ -472,26 +472,24 @@ class UsersController extends Controller {
       if (bodyData.rating) {
         dataObj["rating"] = bodyData.rating;
       }
-      if (bodyData.accomodation) {
-        dataObj["accomodation"] = bodyData.accomodation;
-      }
-      if (bodyData.scholarship) {
-        dataObj["scholarship"] = bodyData.scholarship;
-      }
-      if (bodyData.part_time_work) {
-        dataObj["part_time_work"] = bodyData.part_time_work;
-      }
+
+      dataObj["accomodation"] = bodyData.accomodation;
+
+      dataObj["scholarship"] = bodyData.scholarship;
+
+      dataObj["part_time_work"] = bodyData.part_time_work;
+
       if (bodyData.about) {
         dataObj["about"] = bodyData.about;
       }
-
+      console.log(dataObj);
       let updateDetails = await UniversityDetails.updateOne(
         {
           user_id: ObjectID(_this.req.user.userId),
         },
         dataObj
       );
-      console.log(updateDetails);
+
       if (_.isEmpty(updateDetails)) {
         return _this.res.send({
           status: 0,

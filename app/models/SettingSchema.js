@@ -56,8 +56,21 @@ var termandconditionSchema = new schema(
     timestamps: true,
   }
 );
+var blog = new schema(
+  {
+    title: { type: String, default: "" },
+    subtitle: { type: String, default: "" },
+    image: { type: String, default: "" },
+    content: { type: String, default: "" },
+    is_delete: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 var FAQ = mongoose.model("faq", faqSchema);
+var Blog = mongoose.model("blog", blog);
 var ContactUs = mongoose.model("contact_us", contactUsSchema);
 var AboutUs = mongoose.model("about_us", aboutUsSchema);
 var PrivacyPolicy = mongoose.model("privacy_policy", privacySchema);
@@ -68,6 +81,7 @@ var TermAndCondition = mongoose.model(
 );
 
 module.exports = {
+  Blog,
   FAQ,
   ContactUs,
   AboutUs,

@@ -3,6 +3,10 @@ const ObjectID = require("mongodb").ObjectId;
 const Globals = require("../../configs/Globals");
 const Model = require("../models/Model");
 const FAQ = require("../models/SettingSchema").FAQ;
+let Form = require("../services/Form");
+let File = require("../services/File");
+let Blog = require("../models/SettingSchema").Blog;
+
 const AboutUs = require("../models/SettingSchema").AboutUs;
 const ContactUs = require("../models/SettingSchema").ContactUs;
 const PrivacyPolicy = require("../models/SettingSchema").PrivacyPolicy;
@@ -524,6 +528,221 @@ class SettingController extends Controller {
         is_from: "API Error",
         api_name: "Admin Route Api",
         function_name: "updateWorkingPolicy",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "server error" });
+    }
+  }
+
+  async AddBlog() {
+    let _this = this;
+    try {
+      let form = new Form(_this.req);
+      let formObject = await form.parse();
+      _this.req.body = formObject.fields;
+      console.log(formObject.files);
+      console.log("body", _this.req.body);
+
+      var dataObj = {};
+
+      if (_this.req.body.title.length > 0) {
+        dataObj["title"] = _this.req.body.title[0];
+      }
+      if (_this.req.body.subtitle.length > 0) {
+        dataObj["subtitle"] = _this.req.body.subtitle[0];
+      }
+      if (_this.req.body.content.length > 0) {
+        dataObj["content"] = _this.req.body.content[0];
+      }
+
+      if (formObject.files.file) {
+        const file = new File(formObject.files);
+        let fileObject = await file.store("blog", "blog");
+        let filepath = fileObject.filePartialPath;
+        dataObj.user_photo = filepath;
+      }
+      dataObj["image"] = dataObj.user_photo || "/public/no-image-user.png";
+
+      console.log(dataObj);
+
+      const addBlog = await new Model(Blog).store(dataObj);
+      if (_.isEmpty(addBlog)) {
+        return _this.res.send({
+          status: 0,
+          message: "saving data fail",
+        });
+      } else {
+        return _this.res.send({
+          status: 1,
+          message: "blog added  successfully",
+        });
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "AddBlog",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "server error" });
+    }
+  }
+
+  async GetBlog() {
+    let _this = this;
+    try {
+      if (_this.req.body.blog_id) {
+        let singleBlog = await Blog.findOne({
+          _id: ObjectID(_this.req.body.blog_id),
+          is_delete: false,
+        });
+        if (!_.isEmpty(singleBlog)) {
+          return _this.res.send({
+            status: 1,
+            message: "blog returned successfully",
+            data: singleBlog,
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "nothing found",
+          });
+        }
+      } else {
+        if (!_this.req.body.page || !_this.req.body.pagesize) {
+          return this.res.send({
+            status: 0,
+            message: "Please send proper data.",
+          });
+        }
+
+        let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
+        let sort = { createdAt: -1 };
+        let getBlog = await Blog.find({ is_delete: false })
+          .sort(sort)
+          .skip(skip)
+          .limit(_this.req.body.pagesize);
+        let count = await Blog.countDocuments({ is_delete: false });
+        if (getBlog.length > 0) {
+          return _this.res.send({
+            status: 1,
+            message: "Blog returned successfully",
+            data: getBlog,
+            count: count,
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "blog list is empty",
+            data: [],
+          });
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "Admin Route Api",
+        function_name: "GetBlog",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "server error" });
+    }
+  }
+
+  async UpdateBlog() {
+    let _this = this;
+    try {
+      if (_this.req.body.is_delete) {
+        if (!_this.req.body.blog_id)
+          return _this.res.send({ status: 0, message: "please send blog id" });
+
+        let delBlog = await Blog.findByIdAndUpdate(
+          {
+            _id: ObjectID(_this.req.body.blog_id),
+          },
+          { is_delete: true },
+          { new: true }
+        );
+        if (_.isEmpty(delBlog)) {
+          return _this.res.send({
+            status: 0,
+            message: "deleting data fail",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "blog deleted  successfully",
+          });
+        }
+      } else {
+        let form = new Form(_this.req);
+        let formObject = await form.parse();
+        _this.req.body = formObject.fields;
+        console.log(formObject.files);
+        console.log("body", _this.req.body);
+        let blog_id = "";
+
+        var dataObj = {};
+        if (!_this.req.body.blog_id.length > 0) {
+          return _this.res.send({ status: 0, message: "send blog id" });
+        } else {
+          blog_id = _this.req.body.blog_id[0];
+        }
+
+        if (_this.req.body.title.length > 0) {
+          dataObj["title"] = _this.req.body.title[0];
+        }
+        if (_this.req.body.subtitle.length > 0) {
+          dataObj["subtitle"] = _this.req.body.subtitle[0];
+        }
+        if (_this.req.body.content.length > 0) {
+          dataObj["content"] = _this.req.body.content[0];
+        }
+
+        if (formObject.files.file) {
+          const file = new File(formObject.files);
+          let fileObject = await file.store("blog", "blog");
+          let filepath = fileObject.filePartialPath;
+          dataObj.user_photo = filepath;
+        }
+        dataObj["image"] = dataObj.user_photo || "/public/no-image-user.png";
+
+        console.log(dataObj);
+
+        const updateBlog = await Blog.findByIdAndUpdate(
+          { _id: ObjectID(blog_id) },
+          dataObj,
+          { new: true }
+        );
+        if (_.isEmpty(updateBlog)) {
+          return _this.res.send({
+            status: 0,
+            message: "update data fail",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "blog updated  successfully",
+          });
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "UpdateBlog",
         error_title: error.name,
         description: error.message,
       };

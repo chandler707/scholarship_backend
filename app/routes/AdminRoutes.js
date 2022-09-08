@@ -169,6 +169,19 @@ module.exports = (app, express) => {
     const adminObj = new SettingController().boot(req, res);
     return adminObj.UpdateFaq();
   });
+
+  router.post("/add_blog", (req, res, next) => {
+    const adminObj = new SettingController().boot(req, res);
+    return adminObj.AddBlog();
+  });
+  router.post("/get_blog", (req, res, next) => {
+    const adminObj = new SettingController().boot(req, res);
+    return adminObj.GetBlog();
+  });
+  router.post("/update_blog", (req, res, next) => {
+    const adminObj = new SettingController().boot(req, res);
+    return adminObj.UpdateBlog();
+  });
   router.post("/update_contact_us", (req, res, next) => {
     const adminObj = new SettingController().boot(req, res);
     return adminObj.UpdateContactUs();
