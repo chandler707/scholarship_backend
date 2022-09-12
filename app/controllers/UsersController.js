@@ -568,9 +568,14 @@ class UsersController extends Controller {
   async GetUniversityProfile() {
     let _this = this;
     try {
+      console.log("country");
+
       let filter = { is_delete: false, user_type: "university" };
+      console.log("country", _this.req.body.country_id);
+
       if (_this.req.body.country_id) {
-        filter["country_id"] = ObjectID(_this.req.body.country_id);
+        console.log("country", _this.req.body.country_id);
+        filter["country"] = _this.req.body.country_id;
       } else {
         if (!_this.req.body.user_id) {
           filter["_id"] = ObjectID(_this.req.user.userId);

@@ -20,7 +20,7 @@ var attributeVal = new schema(
     },
     attribute_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "attributes",
+      ref: "attribute",
       index: true,
     },
     attribute_value: { type: String, default: "" },

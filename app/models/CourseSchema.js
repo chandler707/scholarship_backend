@@ -11,21 +11,45 @@ var courses = new schema(
 
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "course_categories",
+      ref: "course_category",
       index: true,
     },
     course_name: { type: String, default: false },
     is_delete: { type: Boolean, default: false },
-    type: { type: String, default: "" },
+    type: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "attribute_values",
+      index: true,
+    },
     total_course_fees: { type: Number, default: "" },
     course_duration: { type: Number, default: "" },
-    course_level: { type: String, default: "" },
-    course_program: { type: String, default: "" },
-    admission: { type: Date, default: "" },
-    work_experience: { type: String, default: "" },
+    course_level: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "attribute_values",
+      index: true,
+    },
+    course_program: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "attribute_values",
+      index: true,
+    },
+    admission: { type: String, default: "" },
+    work_experience: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "attribute_values",
+      index: true,
+    },
     eligibility: { type: String, default: "" },
-    course_language: { type: String, default: "" },
-    required_degress: { type: String, default: "" },
+    course_language: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "languages",
+      index: true,
+    },
+    required_degress: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "attribute_values",
+      index: true,
+    },
     fees: { type: Array, default: [] },
   },
   {

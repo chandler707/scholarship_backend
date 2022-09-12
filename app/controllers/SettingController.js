@@ -50,6 +50,22 @@ class SettingController extends Controller {
   async GetFaq() {
     let _this = this;
     try {
+      if (_this.req.body.is_all) {
+        let findAll = await FAQ.find({}).sort({ createdAt: -1 });
+        if (findAll.length > 0) {
+          return _this.res.send({
+            status: 1,
+            message: "Faq returned successfully",
+            data: findAll,
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "faq list is empty",
+            data: [],
+          });
+        }
+      }
       if (_this.req.body.faq_id) {
         let singleFaq = await FAQ.findOne({
           _id: ObjectID(_this.req.body.faq_id),

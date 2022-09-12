@@ -239,11 +239,17 @@ class AttributesController extends Controller {
     let _this = this;
     try {
       if (_this.req.body.is_all) {
-        console.log(_this.req.body);
-        let getAttribute = await AttributeValue.find({
-          attribute_id: ObjectID(_this.req.body.attribute_id),
-          is_delete: false,
-        });
+        let getAttribute;
+        if (!_this.req.body.attribute_id) {
+          getAttribute = await AttributeValue.find({
+            is_delete: false,
+          }).populate("attribute_id");
+        } else {
+          getAttribute = await AttributeValue.find({
+            attribute_id: ObjectID(_this.req.body.attribute_id),
+            is_delete: false,
+          });
+        }
         console.log(getAttribute);
         if (getAttribute.length > 0) {
           return _this.res.send({

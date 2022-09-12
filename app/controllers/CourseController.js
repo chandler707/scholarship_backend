@@ -14,6 +14,7 @@ class CourseController extends Controller {
   async AddCourse() {
     let _this = this;
     try {
+      console.log(_this.req.body);
       let bodyData = _this.req.body;
       let dataObj = {};
 
@@ -135,7 +136,15 @@ class CourseController extends Controller {
         })
           .sort(sort)
           .skip(skip)
-          .limit(_this.req.body.pagesize);
+          .limit(_this.req.body.pagesize)
+          .populate("category_id")
+          .populate("type")
+          .populate("course_level")
+          .populate("course_program")
+          .populate("work_experience")
+          .populate("course_language")
+          .populate("required_degress");
+
         let count = await Course.countDocuments({
           is_delete: false,
           user_id: ObjectID(_this.req.body.user_id),

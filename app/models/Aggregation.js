@@ -12,12 +12,21 @@ class Aggregation {
   }
 
   getUniversityDetails(filter) {
+    let filter1 = {};
+    if (filter.country) {
+      filter1 = {};
+      filter = { "country_detail.name": filter.country };
+    } else {
+      filter1["_id"] = filter._id;
+      filter = {};
+      console.log("filter 1", filter1);
+    }
     return new Promise((resolve, reject) => {
       try {
         this.collection.aggregate(
           [
             {
-              $match: filter,
+              $match: filter1,
             },
             {
               $lookup: {
@@ -61,11 +70,15 @@ class Aggregation {
                 as: "country_detail",
               },
             },
+
             {
               $unwind: {
                 path: "$country_detail",
                 preserveNullAndEmptyArrays: true,
               },
+            },
+            {
+              $match: filter,
             },
             {
               $lookup: {
