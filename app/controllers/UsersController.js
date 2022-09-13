@@ -14,6 +14,7 @@ const moment = require("moment");
 const Aggregation = require("../models/Aggregation");
 const bcrypt = require("bcrypt");
 const { filterLimit } = require("async");
+const Course = require("../models/CourseSchema").Course;
 const EducationDetails =
   require("../models/EducationDetailSchema").EducationDetails;
 
@@ -569,32 +570,51 @@ class UsersController extends Controller {
     let _this = this;
     try {
       console.log("country");
-
-      let filter = { is_delete: false, user_type: "university" };
-      console.log("country", _this.req.body.country_id);
-
-      if (_this.req.body.country_id) {
+      if (_this.req.body.for_country) {
+        let filter = { is_delete: false, user_type: "university" };
         console.log("country", _this.req.body.country_id);
-        filter["country"] = _this.req.body.country_id;
-      } else {
-        if (!_this.req.body.user_id) {
-          filter["_id"] = ObjectID(_this.req.user.userId);
-        } else {
-          filter["_id"] = ObjectID(_this.req.body.user_id);
-        }
-      }
 
-      console.log(filter);
-      let profile = await new Aggregation(Users).getUniversityDetails(filter);
-      // console.log(profile);
-      if (_.isEmpty(profile)) {
-        return _this.res.send({ status: 0, message: "user does not found" });
+        if (_this.req.body.country_id) {
+          console.log("country", _this.req.body.country_id);
+          filter["country"] = _this.req.body.country_id;
+        } else if (_this.req.body.is_all) {
+          filter["is_all"] = true;
+        } else {
+          if (!_this.req.body.user_id) {
+            filter["_id"] = ObjectID(_this.req.user.userId);
+          } else {
+            filter["_id"] = ObjectID(_this.req.body.user_id);
+          }
+        }
+
+        console.log(filter);
+        let profile = await new Aggregation(Users).getUniversityDetails(filter);
+        // console.log(profile);
+        if (_.isEmpty(profile)) {
+          return _this.res.send({ status: 0, message: "user does not found" });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "user data retured successfully",
+            data: profile,
+          });
+        }
       } else {
-        return _this.res.send({
-          status: 1,
-          message: "user data retured successfully",
-          data: profile,
-        });
+        let filter = { category_id: ObjectID(_this.req.body.category_id) };
+        console.log("filter", filter);
+        let details = await new Aggregation(
+          Course
+        ).getUniversityDetailsByCourse(filter);
+        console.log("details", details);
+        if (_.isEmpty(details)) {
+          return _this.res.send({ status: 0, message: "user does not found" });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "user data retured successfully",
+            data: details,
+          });
+        }
       }
     } catch (error) {
       console.log("error", error);

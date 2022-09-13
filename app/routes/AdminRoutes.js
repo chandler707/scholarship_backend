@@ -95,6 +95,10 @@ module.exports = (app, express) => {
     const adminObj = new UserController().boot(req, res);
     return adminObj.GetUniversityProfile();
   });
+  router.post("/get_universities_profile", (req, res, next) => {
+    const adminObj = new UserController().boot(req, res);
+    return adminObj.GetUniversityProfile();
+  });
   router.post("/change_user_status", (req, res, next) => {
     const adminObj = new AdminController().boot(req, res);
     return adminObj.ChangeUserStatus();
