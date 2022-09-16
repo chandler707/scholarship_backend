@@ -726,6 +726,12 @@ class AdminController extends Controller {
       if (bodyData.type) {
         dataObj["type"] = bodyData.type;
       }
+      if (bodyData.amount) {
+        dataObj["amount"] = bodyData.amount;
+      }
+      if (bodyData.from) {
+        dataObj["from"] = bodyData.from;
+      }
 
       let saveData = await new Model(GuestUser).store(dataObj);
       if (_.isEmpty(saveData)) {
@@ -762,12 +768,22 @@ class AdminController extends Controller {
 
       let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
       let sort = { createdAt: 1 };
-
-      let getUser = await GuestUser.find({ is_delete: false })
+      let filter = {};
+      if (_this.req.body.is_popup) {
+        filter = { is_delete: false, from: "popup" };
+      } else if (_this.req.body.is_loan) {
+        filter = { is_delete: false, from: "loan" };
+      } else if (_this.req.body.is_money) {
+        filter = { is_delete: false, from: "money" };
+      } else if (_this.req.body.is_bank) {
+        filter = { is_delete: false, from: "bank" };
+      }
+      console.log("fikler", filter);
+      let getUser = await GuestUser.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(_this.req.body.pagesize);
-      let count = await GuestUser.countDocuments({ is_delete: false });
+      let count = await GuestUser.countDocuments(filter);
       if (getUser.length > 0) {
         return _this.res.send({
           status: 1,

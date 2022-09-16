@@ -218,7 +218,7 @@ class UsersController extends Controller {
       let form = new Form(_this.req);
       let formObject = await form.parse();
       _this.req.body = JSON.parse(formObject.fields.data[0]);
-      console.log(formObject.files);
+      console.log("this is body", _this.req.body);
 
       var dataObj = {};
       if (_this.req.body.is_student) {
@@ -521,19 +521,22 @@ class UsersController extends Controller {
     let _this = this;
     try {
       console.log("profile", _this.req.user.userId);
-      if (!_this.req.user.userId) {
-        return _this.res.send({ status: 0, message: "please send user id" });
+      let userID = "";
+      if (!_this.req.body.user_id) {
+        userID = ObjectID(_this.req.user.userId);
+      } else {
+        userID = ObjectID(_this.req.body.user_id);
       }
 
       let profile = await Users.findOne({
-        _id: ObjectID(_this.req.user.userId),
+        _id: userID,
         is_delete: false,
         is_block: false,
       }).lean();
       console.log("ooo", profile);
 
       if (_.isEmpty(profile)) {
-        return _this.req.send({ status: 0, message: "user does not found" });
+        return _this.res.send({ status: 0, message: "user does not found" });
       } else {
         let educationDetail = await EducationDetails.findOne({
           user_id: ObjectID(profile._id),
@@ -572,7 +575,6 @@ class UsersController extends Controller {
       console.log("country");
       if (_this.req.body.for_country) {
         let filter = { is_delete: false, user_type: "university" };
-        console.log("country", _this.req.body.country_id);
 
         if (_this.req.body.country_id) {
           console.log("country", _this.req.body.country_id);
@@ -587,7 +589,7 @@ class UsersController extends Controller {
           }
         }
 
-        console.log(filter);
+        console.log(filter, "filter");
         let profile = await new Aggregation(Users).getUniversityDetails(filter);
         // console.log(profile);
         if (_.isEmpty(profile)) {

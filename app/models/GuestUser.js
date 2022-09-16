@@ -7,6 +7,8 @@ var guestSchema = new schema(
     name: { type: String, default: "" },
     mobile: { type: Number, default: "" },
     type: { type: String, default: "" },
+    amount: { type: String, default: "" },
+    from: { type: String, default: "popup" },
     is_delete: { type: Boolean, default: false },
   },
   {

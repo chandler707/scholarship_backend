@@ -10,7 +10,7 @@ var test = new schema(
     },
 
     test_name: { type: String, default: "" },
-    test_date: { type: Date, default: "" },
+    test_date: { type: String, default: "" },
 
     reading_score: { type: Number, default: "" },
     lisning_score: { type: Number, default: "" },

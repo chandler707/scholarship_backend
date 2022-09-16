@@ -27,7 +27,7 @@ var user = new schema(
     pincode: { type: Number, default: "" },
     father_name: { type: String, default: "" },
     first_language: { type: String, default: "" },
-    dob: { type: Date, default: "" },
+    dob: { type: String, default: "" },
     gender: { type: String, default: "" },
     citizenship_country: { type: String, default: "" },
     passport_number: { type: String, default: "" },
