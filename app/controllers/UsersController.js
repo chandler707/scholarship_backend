@@ -522,17 +522,27 @@ class UsersController extends Controller {
     try {
       console.log("profile", _this.req.user.userId);
       let userID = "";
+      let profile;
       if (!_this.req.body.user_id) {
         userID = ObjectID(_this.req.user.userId);
+        profile = await Users.findOne({
+          _id: userID,
+          is_delete: false,
+          is_block: false,
+        }).lean();
       } else {
         userID = ObjectID(_this.req.body.user_id);
+        profile = await Users.findOne({
+          _id: userID,
+          is_delete: false,
+          is_block: false,
+        })
+
+          .populate("country")
+          .populate("state")
+          .lean();
       }
 
-      let profile = await Users.findOne({
-        _id: userID,
-        is_delete: false,
-        is_block: false,
-      }).lean();
       console.log("ooo", profile);
 
       if (_.isEmpty(profile)) {

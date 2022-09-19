@@ -484,7 +484,7 @@ class AdminController extends Controller {
       }
 
       let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
-      let sort = { createdAt: 1 };
+      let sort = { createdAt: -1 };
 
       if (_this.req.body.is_student) {
         filter["user_type"] = "student";
