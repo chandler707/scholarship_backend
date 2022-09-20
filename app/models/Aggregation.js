@@ -11,7 +11,8 @@ class Aggregation {
     this.collection = collection;
   }
 
-  getUniversityDetails(filter) {
+  getUniversityDetails(filter, skip, sort, pagesize) {
+    console.log("error jaii", skip, sort, pagesize);
     let filter1 = {};
     if (filter.country) {
       filter1 = {};
@@ -105,6 +106,15 @@ class Aggregation {
                 path: "$state_detail",
                 preserveNullAndEmptyArrays: true,
               },
+            },
+            {
+              $sort: sort,
+            },
+            {
+              $skip: skip,
+            },
+            {
+              $limit: pagesize,
             },
           ],
           (err, data) => {

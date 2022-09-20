@@ -148,10 +148,16 @@ module.exports = (app, express) => {
     return userObj.AddCourse();
   });
 
-  router.post("/get_course", (req, res, next) => {
+  router.post("/get_course", isAuthorised, (req, res, next) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.GetCourse();
   });
+
+  router.post("/update_course", isAuthorised, (req, res, next) => {
+    const userObj = new CourseController().boot(req, res);
+    return userObj.UpdateCourse();
+  });
+
   router.post("/student_country", (req, res, next) => {
     const userObj = new LocationController().boot(req, res);
     return userObj.GetStudentCountry();

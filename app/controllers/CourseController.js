@@ -62,7 +62,7 @@ class CourseController extends Controller {
       if (bodyData.required_degress) {
         dataObj["required_degress"] = bodyData.required_degress;
       }
-      if (bodyData.fees) {
+      if (bodyData.fees.length > 0) {
         dataObj["fees"] = bodyData.fees;
       }
 
@@ -114,11 +114,11 @@ class CourseController extends Controller {
           });
         }
       } else {
-        if (!_this.req.body.user_id) {
-          return _this.res.send({
-            status: 0,
-            message: "Please send user id.",
-          });
+        let userID = "";
+        if (_this.req.body.user_id) {
+          userID = ObjectID(_this.req.body.user_id);
+        } else {
+          userID = ObjectID(_this.req.user.userId);
         }
 
         if (!_this.req.body.page || !_this.req.body.pagesize) {
@@ -132,7 +132,7 @@ class CourseController extends Controller {
         let sort = { createdAt: -1 };
         let courseList = await Course.find({
           is_delete: false,
-          user_id: ObjectID(_this.req.body.user_id),
+          user_id: userID,
         })
           .sort(sort)
           .skip(skip)
@@ -147,7 +147,7 @@ class CourseController extends Controller {
 
         let count = await Course.countDocuments({
           is_delete: false,
-          user_id: ObjectID(_this.req.body.user_id),
+          user_id: userID,
         });
         if (courseList != null) {
           if (courseList.length > 0) {
@@ -164,6 +164,64 @@ class CourseController extends Controller {
               data: [],
             });
           }
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+      let globalObj = new Globals();
+      var dataErrorObj = {
+        is_from: "API Error",
+        api_name: "admin route Api",
+        function_name: "GetCourse",
+        error_title: error.name,
+        description: error.message,
+      };
+      globalObj.addErrorLogInDB(dataErrorObj);
+      return _this.res.send({ status: 0, message: "Server Error" });
+    }
+  }
+
+  async UpdateCourse() {
+    let _this = this;
+    try {
+      if (!_this.req.body.is_delete) {
+        let courseList = await Course.find({ is_delete: false });
+        if (courseList.length > 0) {
+          return _this.res.send({
+            status: 1,
+            message: "Course list returned",
+            data: courseList,
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+
+            data: [],
+          });
+        }
+      } else {
+        if (!_this.req.body.course_id) {
+          return _this.res.send({ status: 0, mesage: "please send course id" });
+        }
+
+        let deleteCourse = await Course.findByIdAndUpdate(
+          {
+            _id: _this.req.body.course_id,
+          },
+          { is_delete: true },
+          { new: true }
+        );
+
+        if (_.isEmpty(deleteCourse)) {
+          return _this.res.send({
+            status: 0,
+            message: "error in deleting data",
+          });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "course deleted successfully",
+          });
         }
       }
     } catch (error) {

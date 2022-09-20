@@ -715,7 +715,7 @@ class AdminController extends Controller {
       let dataObj = {};
       let bodyData = _this.req.body;
       if (bodyData.email) {
-        dataObj["email"] = bodyData.email;
+        dataObj["email"] = bodyData.email.trim();
       }
       if (bodyData.name) {
         dataObj["name"] = bodyData.name;
@@ -732,14 +732,24 @@ class AdminController extends Controller {
       if (bodyData.from) {
         dataObj["from"] = bodyData.from;
       }
-
-      let saveData = await new Model(GuestUser).store(dataObj);
-      if (_.isEmpty(saveData)) {
-        return _this.res.send({ status: 0, message: "error in saving data" });
+      let checkBlock = await Users.findOne({
+        email: dataObj.email,
+        is_block: true,
+      });
+      if (_.isEmpty(checkBlock)) {
+        let saveData = await new Model(GuestUser).store(dataObj);
+        if (_.isEmpty(saveData)) {
+          return _this.res.send({ status: 0, message: "error in saving data" });
+        } else {
+          return _this.res.send({
+            status: 1,
+            message: "data saved successfully",
+          });
+        }
       } else {
         return _this.res.send({
-          status: 1,
-          message: "data saved successfully",
+          status: 0,
+          message: "You are Blocked by the Admin...please contact ",
         });
       }
     } catch (error) {

@@ -585,22 +585,45 @@ class UsersController extends Controller {
       console.log("country");
       if (_this.req.body.for_country) {
         let filter = { is_delete: false, user_type: "university" };
+        let filterCount = { is_delete: false, user_type: "university" };
 
         if (_this.req.body.country_id) {
           console.log("country", _this.req.body.country_id);
           filter["country"] = _this.req.body.country_id;
+          // filterCount["country"] = _this.req.body.country_id;
         } else if (_this.req.body.is_all) {
           filter["is_all"] = true;
         } else {
           if (!_this.req.body.user_id) {
             filter["_id"] = ObjectID(_this.req.user.userId);
+            filterCount["_id"] = ObjectID(_this.req.user.userId);
           } else {
             filter["_id"] = ObjectID(_this.req.body.user_id);
+            filterCount["_id"] = ObjectID(_this.req.body.user_id);
           }
+        }
+        let skip = 0;
+        let sort = { createdAt: -1 };
+        let pagesize = 100;
+
+        if (_this.req.body.page && _this.req.body.pagesize) {
+          console.log(
+            "is it inside",
+            _this.req.body.page,
+            _this.req.body.pagesize
+          );
+          skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
+          pagesize = _this.req.body.pagesize;
         }
 
         console.log(filter, "filter");
-        let profile = await new Aggregation(Users).getUniversityDetails(filter);
+        let profile = await new Aggregation(Users).getUniversityDetails(
+          filter,
+          skip,
+          sort,
+          pagesize
+        );
+        let count = await Users.countDocuments(filterCount);
         // console.log(profile);
         if (_.isEmpty(profile)) {
           return _this.res.send({ status: 0, message: "user does not found" });
@@ -609,6 +632,7 @@ class UsersController extends Controller {
             status: 1,
             message: "user data retured successfully",
             data: profile,
+            count: count,
           });
         }
       } else {
