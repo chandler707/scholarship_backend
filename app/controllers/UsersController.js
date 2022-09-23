@@ -342,49 +342,36 @@ class UsersController extends Controller {
   async UpdateUserDetails() {
     let _this = this;
     try {
+      let form = new Form(_this.req);
+      let formObject = await form.parse();
+      _this.req.body = JSON.parse(formObject.fields.data[0]);
       let bodyData = _this.req.body;
-      let dataObj = {};
+      // console.log(bodyData, "asd");
       if (bodyData.education_detail) {
-        console.log(bodyData);
-        if (bodyData.education_data.highest_education) {
-          dataObj["highest_education"] =
-            bodyData.education_data.highest_education;
-        }
-        if (bodyData.education_data.country_of_education) {
-          dataObj["country_of_education"] =
-            bodyData.education_data.country_of_education;
-        }
-        if (bodyData.education_data.grade_average) {
-          dataObj["grade_average"] = bodyData.education_data.grade_average;
-        }
-        if (bodyData.education_data.school_start) {
-          dataObj["school_start"] = bodyData.education_data.school_start;
-        }
-        if (bodyData.education_data.school_end) {
-          dataObj["school_end"] = bodyData.education_data.school_end;
-        }
-        if (bodyData.education_data.school_country) {
-          dataObj["school_country"] = bodyData.education_data.school_country;
-        }
-        if (bodyData.education_data.school_state) {
-          dataObj["school_state"] = bodyData.education_data.school_state;
-        }
-        if (bodyData.education_data.school_address) {
-          dataObj["school_address"] =
-            bodyData.education_data.school_address.trim();
-        }
-        if (bodyData.education_data.school_zip) {
-          dataObj["school_zip"] = bodyData.education_data.school_zip;
-        }
-        console.log("hit");
+        console.log(bodyData.education_data);
+        delete bodyData.education_data["_id"];
 
+        // console.log(bodyData);
+
+        console.log("hit");
+        if (formObject.files.bachelor) {
+          console.log("file h andar");
+          const file = new File(formObject.files.bachelor);
+          let fileObject = await file.store("users_documents", "bachelor");
+          let filepath = fileObject.filePartialPath;
+          bodyData.education_data.user_photo = filepath;
+        }
+        bodyData.education_data["bachelor_degree_marksheet"] =
+          bodyData.education_data.user_photo ||
+          bodyData.education_data.bachelor_degree_marksheet;
+        console.log("tjis is body,", bodyData.education_data);
         let updateDetails = await EducationDetails.updateOne(
           {
             user_id: ObjectID(_this.req.user.userId),
           },
-          dataObj
+          bodyData.education_data
         );
-        console.log(updateDetails);
+
         if (_.isEmpty(updateDetails)) {
           return _this.res.send({
             status: 0,
@@ -398,33 +385,14 @@ class UsersController extends Controller {
         }
       }
       if (bodyData.test_score) {
-        if (bodyData.test_data.test_name) {
-          dataObj["test_name"] = bodyData.test_data.test_name;
-        }
-        if (bodyData.test_data.test_date) {
-          dataObj["test_date"] = bodyData.test_data.test_date;
-        }
-        if (bodyData.test_data.reading_score) {
-          dataObj["reading_score"] = bodyData.test_data.reading_score;
-        }
-        if (bodyData.test_data.lisning_score) {
-          dataObj["lisning_score"] = bodyData.test_data.lisning_score;
-        }
-        if (bodyData.test_data.writing_score) {
-          dataObj["writing_score"] = bodyData.test_data.writing_score;
-        }
-        if (bodyData.test_data.speaking_score) {
-          dataObj["speaking_score"] = bodyData.test_data.speaking_score;
-        }
-        if (bodyData.test_data.overall) {
-          dataObj["overall"] = bodyData.test_data.overall;
-        }
+        delete bodyData.test_data["_id"];
+        console.log(bodyData);
 
         let updateTest = await TestScore.updateOne(
           {
             user_id: ObjectID(_this.req.user.userId),
           },
-          dataObj,
+          bodyData.test_data,
           { new: true }
         );
         if (_.isEmpty(updateTest)) {
