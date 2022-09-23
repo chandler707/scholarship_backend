@@ -64,15 +64,15 @@ module.exports = function () {
   }
 
   app.set("trust proxy", 1);
-  app.use(
-    session({
-      cookie: { maxAge: 30000 },
-      saveUninitialized: true,
-      resave: true,
-      secret: process.env.SESSION_SECRET,
-      name: "tindersagarsecuresession",
-    })
-  );
+  // app.use(
+  //   session({
+  //     cookie: { maxAge: 30000 },
+  //     saveUninitialized: true,
+  //     resave: true,
+  //     secret: process.env.SESSION_SECRET,
+  //     name: "tindersagarsecuresession",
+  //   })
+  // );
 
   // =======   Routing
 

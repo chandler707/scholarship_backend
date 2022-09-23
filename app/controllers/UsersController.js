@@ -364,6 +364,40 @@ class UsersController extends Controller {
         bodyData.education_data["bachelor_degree_marksheet"] =
           bodyData.education_data.user_photo ||
           bodyData.education_data.bachelor_degree_marksheet;
+
+        if (formObject.files.tenth) {
+          console.log("file h andar");
+          const file = new File(formObject.files.tenth);
+          let fileObject = await file.store("users_documents", "tenth");
+          let filepath = fileObject.filePartialPath;
+          bodyData.education_data.user_photo = filepath;
+        }
+        bodyData.education_data["bachelor_degree_marksheet"] =
+          bodyData.education_data.user_photo ||
+          bodyData.education_data.bachelor_degree_marksheet;
+        console.log("tjis is body,", bodyData.education_data);
+
+        if (formObject.files.bachelor) {
+          console.log("file h andar");
+          const file = new File(formObject.files.bachelor);
+          let fileObject = await file.store("users_documents", "bachelor");
+          let filepath = fileObject.filePartialPath;
+          bodyData.education_data.user_photo = filepath;
+        }
+        bodyData.education_data["bachelor_degree_marksheet"] =
+          bodyData.education_data.user_photo ||
+          bodyData.education_data.bachelor_degree_marksheet;
+        console.log("tjis is body,", bodyData.education_data);
+        if (formObject.files.bachelor) {
+          console.log("file h andar");
+          const file = new File(formObject.files.bachelor);
+          let fileObject = await file.store("users_documents", "bachelor");
+          let filepath = fileObject.filePartialPath;
+          bodyData.education_data.user_photo = filepath;
+        }
+        bodyData.education_data["bachelor_degree_marksheet"] =
+          bodyData.education_data.user_photo ||
+          bodyData.education_data.bachelor_degree_marksheet;
         console.log("tjis is body,", bodyData.education_data);
         let updateDetails = await EducationDetails.updateOne(
           {
