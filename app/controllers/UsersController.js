@@ -272,8 +272,9 @@ class UsersController extends Controller {
           filepath = fileObject.filePartialPath;
           dataObj.user_photo = filepath;
         }
+
         dataObj["profile_picture"] =
-          dataObj.user_photo || "/public/no-image-user.png";
+          dataObj.user_photo || _this.req.body.profile_picture;
       }
 
       if (_this.req.body.is_university) {
@@ -370,35 +371,34 @@ class UsersController extends Controller {
           const file = new File(formObject.files.tenth);
           let fileObject = await file.store("users_documents", "tenth");
           let filepath = fileObject.filePartialPath;
-          bodyData.education_data.user_photo = filepath;
+          bodyData.education_data.use_photo = filepath;
         }
-        bodyData.education_data["bachelor_degree_marksheet"] =
-          bodyData.education_data.user_photo ||
-          bodyData.education_data.bachelor_degree_marksheet;
-        console.log("tjis is body,", bodyData.education_data);
+        bodyData.education_data["tenth_marksheet"] =
+          bodyData.education_data.use_photo ||
+          bodyData.education_data.tenth_marksheet;
 
-        if (formObject.files.bachelor) {
+        if (formObject.files.twelfth) {
           console.log("file h andar");
-          const file = new File(formObject.files.bachelor);
-          let fileObject = await file.store("users_documents", "bachelor");
+          const file = new File(formObject.files.twelfth);
+          let fileObject = await file.store("users_documents", "twelfth");
           let filepath = fileObject.filePartialPath;
-          bodyData.education_data.user_photo = filepath;
+          bodyData.education_data.us_photo = filepath;
         }
-        bodyData.education_data["bachelor_degree_marksheet"] =
-          bodyData.education_data.user_photo ||
-          bodyData.education_data.bachelor_degree_marksheet;
-        console.log("tjis is body,", bodyData.education_data);
-        if (formObject.files.bachelor) {
+        bodyData.education_data["twelfth_marksheet"] =
+          bodyData.education_data.us_photo ||
+          bodyData.education_data.twelfth_marksheet;
+
+        if (formObject.files.master) {
           console.log("file h andar");
-          const file = new File(formObject.files.bachelor);
-          let fileObject = await file.store("users_documents", "bachelor");
+          const file = new File(formObject.files.master);
+          let fileObject = await file.store("users_documents", "master");
           let filepath = fileObject.filePartialPath;
-          bodyData.education_data.user_photo = filepath;
+          bodyData.education_data.u_photo = filepath;
         }
-        bodyData.education_data["bachelor_degree_marksheet"] =
-          bodyData.education_data.user_photo ||
-          bodyData.education_data.bachelor_degree_marksheet;
-        console.log("tjis is body,", bodyData.education_data);
+        bodyData.education_data["master_degree_marksheet"] =
+          bodyData.education_data.u_photo ||
+          bodyData.education_data.master_degree_marksheet;
+
         let updateDetails = await EducationDetails.updateOne(
           {
             user_id: ObjectID(_this.req.user.userId),
@@ -420,7 +420,135 @@ class UsersController extends Controller {
       }
       if (bodyData.test_score) {
         delete bodyData.test_data["_id"];
-        console.log(bodyData);
+        if (formObject.files.ilet) {
+          console.log("file h andar");
+          const file = new File(formObject.files.ilet);
+          let fileObject = await file.store("users_documents", "ilet");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.a = filepath;
+        }
+        bodyData.test_data["ielts_marksheet"] =
+          bodyData.test_data.a || bodyData.test_data.ielts_marksheet;
+
+        if (formObject.files.gre) {
+          console.log("file h andar");
+          const file = new File(formObject.files.gre);
+          let fileObject = await file.store("users_documents", "gre");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.b = filepath;
+        }
+        bodyData.test_data["gre_marksheet"] =
+          bodyData.test_data.b || bodyData.test_data.gre_marksheet;
+
+        if (formObject.files.gmat) {
+          console.log("file h andar");
+          const file = new File(formObject.files.gmat);
+          let fileObject = await file.store("users_documents", "gmat");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.c = filepath;
+        }
+        bodyData.test_data["gmat_marksheet"] =
+          bodyData.test_data.a || bodyData.test_data.gmat_marksheet;
+
+        if (formObject.files.testas) {
+          console.log("file h andar");
+          const file = new File(formObject.files.testas);
+          let fileObject = await file.store("users_documents", "testas");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.d = filepath;
+        }
+        bodyData.test_data["testas_marksheet"] =
+          bodyData.test_data.d || bodyData.test_data.testas_marksheet;
+
+        if (formObject.files.neet) {
+          console.log("file h andar");
+          const file = new File(formObject.files.neet);
+          let fileObject = await file.store("users_documents", "neet");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.e = filepath;
+        }
+        bodyData.test_data["neet_marksheet"] =
+          bodyData.test_data.e || bodyData.test_data.neet_marksheet;
+
+        if (formObject.files.iit_mains) {
+          console.log("file h andar");
+          const file = new File(formObject.files.iit_mains);
+          let fileObject = await file.store("users_documents", "iit_mains");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.f = filepath;
+        }
+        bodyData.test_data["iit_mains_marksheet"] =
+          bodyData.test_data.f || bodyData.test_data.iit_mains_marksheet;
+
+        if (formObject.files.iit_advance) {
+          console.log("file h andar");
+          const file = new File(formObject.files.iit_advance);
+          let fileObject = await file.store("users_documents", "iit_advance");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.g = filepath;
+        }
+        bodyData.test_data["iit_advance_marksheet"] =
+          bodyData.test_data.g || bodyData.test_data.iit_advance_marksheet;
+
+        if (formObject.files.a1) {
+          console.log("file h andar");
+          const file = new File(formObject.files.a1);
+          let fileObject = await file.store("users_documents", "a1");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.h = filepath;
+        }
+        bodyData.test_data["a1_certificate"] =
+          bodyData.test_data.h || bodyData.test_data.a1_certificate;
+
+        if (formObject.files.a2) {
+          console.log("file h andar");
+          const file = new File(formObject.files.a2);
+          let fileObject = await file.store("users_documents", "a2");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.i = filepath;
+        }
+        bodyData.test_data["a2_certificate"] =
+          bodyData.test_data.i || bodyData.test_data.a2_certificate;
+
+        if (formObject.files.b1) {
+          console.log("file h andar");
+          const file = new File(formObject.files.b1);
+          let fileObject = await file.store("users_documents", "b1");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.j = filepath;
+        }
+        bodyData.test_data["b1_certificate"] =
+          bodyData.test_data.j || bodyData.test_data.b1_certificate;
+
+        if (formObject.files.b2) {
+          console.log("file h andar");
+          const file = new File(formObject.files.b2);
+          let fileObject = await file.store("users_documents", "b2");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.m = filepath;
+        }
+        bodyData.test_data["b2_certificate"] =
+          bodyData.test_data.m || bodyData.test_data.b2_certificate;
+
+        if (formObject.files.c1) {
+          console.log("file h andar");
+          const file = new File(formObject.files.c1);
+          let fileObject = await file.store("users_documents", "c1");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.k = filepath;
+        }
+        bodyData.test_data["c1_certificate"] =
+          bodyData.test_data.k || bodyData.test_data.c1_certificate;
+
+        if (formObject.files.c2) {
+          console.log("file h andar");
+          const file = new File(formObject.files.c2);
+          let fileObject = await file.store("users_documents", "c2");
+          let filepath = fileObject.filePartialPath;
+          bodyData.test_data.l = filepath;
+        }
+        bodyData.test_data["c2_certificate"] =
+          bodyData.test_data.l || bodyData.test_data.c2_certificate;
 
         let updateTest = await TestScore.updateOne(
           {

@@ -6,6 +6,7 @@ module.exports = (app, express) => {
   const UsersController = require("../controllers/UsersController");
   const CourseController = require("../controllers/CourseController");
   const LocationController = require("../controllers/LocationController");
+  const ApplicationController = require("../controllers/ApplicationController");
   router.post(
     "/update_user_profile",
     Globals.isAuthorised,
@@ -165,6 +166,22 @@ module.exports = (app, express) => {
   router.post("/student_state", (req, res, next) => {
     const userObj = new LocationController().boot(req, res);
     return userObj.GetStudentState();
+  });
+  router.post("/student_state", (req, res, next) => {
+    const userObj = new LocationController().boot(req, res);
+    return userObj.GetStudentState();
+  });
+  router.post("/add_application", isAuthorised, (req, res, next) => {
+    const userObj = new ApplicationController().boot(req, res);
+    return userObj.AddApplicaiton();
+  });
+  router.post("/get_application", isAuthorised, (req, res, next) => {
+    const userObj = new ApplicationController().boot(req, res);
+    return userObj.GetApplication();
+  });
+  router.post("/update_application", isAuthorised, (req, res, next) => {
+    const userObj = new ApplicationController().boot(req, res);
+    return userObj.UpdateApplication();
   });
 
   app.use(process.env.BASE_API_URL, router);

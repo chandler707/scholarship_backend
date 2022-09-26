@@ -22,9 +22,8 @@ var education = new schema(
     tenth_year: { type: String, default: "" },
     tenth_date: { type: String, default: "" },
     school_country: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "student_countries",
-      index: true,
+      type: String,
+      default: "",
     },
 
     twelfth_score: { type: String, default: "" },
