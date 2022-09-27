@@ -31,13 +31,13 @@ class ApplicationController extends Controller {
         if (checkExist[0].status === "pending") {
           return _this.res.send({
             status: 0,
-            message: "your application is pending ...plase wait for response",
+            message: "your application is pending ...please wait for response",
           });
         } else {
           return _this.res.send({
             status: 0,
             message:
-              "you already applied for this course and your applicatin is approved",
+              "you already applied for this course and your application is approved",
           });
         }
       } else {
