@@ -113,6 +113,23 @@ class CourseController extends Controller {
             data: [],
           });
         }
+      } else if (_this.req.body.course_id) {
+        let getCourse = await Course.findOne({
+          _id: ObjectID(_this.req.body.course_id),
+        });
+
+        if (!_.isEmpty(getCourse)) {
+          return _this.res.send({
+            status: 1,
+            message: "course  returned",
+            data: getCourse,
+          });
+        } else {
+          return _this.res.send({
+            status: 0,
+            message: "course doesn't found",
+          });
+        }
       } else {
         let userID = "";
         if (_this.req.body.user_id) {
@@ -185,18 +202,32 @@ class CourseController extends Controller {
     let _this = this;
     try {
       if (!_this.req.body.is_delete) {
-        let courseList = await Course.find({ is_delete: false });
-        if (courseList.length > 0) {
+        let bodyData = _this.req.body;
+        if (!_this.req.body.course_id) {
           return _this.res.send({
-            status: 1,
-            message: "Course list returned",
-            data: courseList,
+            status: 0,
+            message: "please send course id",
+          });
+        }
+        delete bodyData["_id"];
+        console.log(bodyData);
+
+        let updateCourse = await Course.findByIdAndUpdate(
+          { _id: ObjectID(bodyData.course_id) },
+          bodyData,
+          { new: true }
+        );
+        console.log("this is update", updateCourse);
+
+        if (_.isEmpty(updateCourse)) {
+          return _this.res.send({
+            status: 0,
+            message: "error in updating data",
           });
         } else {
           return _this.res.send({
             status: 1,
-
-            data: [],
+            message: "Course Updated Successfully",
           });
         }
       } else {
@@ -206,7 +237,7 @@ class CourseController extends Controller {
 
         let deleteCourse = await Course.findByIdAndUpdate(
           {
-            _id: _this.req.body.course_id,
+            _id: ObjectID(_this.req.body.course_id),
           },
           { is_delete: true },
           { new: true }

@@ -297,7 +297,7 @@ class LocationController extends Controller {
           country_id: _this.req.body.country_id,
           is_delete: false,
         });
-        console.log("coumntrie", findByCountry);
+        // console.log("coumntrie", findByCountry);
         if (findByCountry.length > 0) {
           return _this.res.send({
             status: 1,
@@ -447,7 +447,7 @@ class LocationController extends Controller {
         countryCode: _this.req.body.countryCode,
         is_delete: false,
       });
-      console.log("coumntrie", findByCountry);
+      // console.log("coumntrie", findByCountry);
       if (findByCountry.length > 0) {
         return _this.res.send({
           status: 1,

@@ -218,7 +218,7 @@ class UsersController extends Controller {
       let form = new Form(_this.req);
       let formObject = await form.parse();
       _this.req.body = JSON.parse(formObject.fields.data[0]);
-      console.log("this is body", _this.req.body);
+      // console.log("this is body", _this.req.body);
 
       var dataObj = {};
       if (_this.req.body.is_student) {
@@ -267,6 +267,7 @@ class UsersController extends Controller {
         }
 
         if (formObject.files.file) {
+          console.log("inside file");
           const file = new File(formObject.files);
           let fileObject = await file.store("users_image", "user");
           filepath = fileObject.filePartialPath;
@@ -301,13 +302,15 @@ class UsersController extends Controller {
         }
 
         if (formObject.files.file) {
+          console.log("inside file university");
+
           const file = new File(formObject.files);
           let fileObject = await file.store("users_image", "user");
           filepath = fileObject.filePartialPath;
           dataObj.user_photo = filepath;
         }
         dataObj["profile_picture"] =
-          dataObj.user_photo || "/public/no-image-user.png";
+          dataObj.user_photo || _this.req.body.profile_picture;
       }
       let userId = ObjectID(_this.req.user.userId);
       console.log(dataObj);
