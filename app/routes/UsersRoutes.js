@@ -150,7 +150,7 @@ module.exports = (app, express) => {
     return userObj.AddCourse();
   });
 
-  router.post("/get_course", isAuthorised, (req, res, next) => {
+  router.post("/get_course", (req, res, next) => {
     const userObj = new CourseController().boot(req, res);
     return userObj.GetCourse();
   });
