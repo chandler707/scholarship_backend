@@ -7,6 +7,7 @@ module.exports = (app, express) => {
   const CourseController = require("../controllers/CourseController");
   const LocationController = require("../controllers/LocationController");
   const ApplicationController = require("../controllers/ApplicationController");
+  const BulkEntryController = require("../controllers/BulkEntryController");
   router.post(
     "/update_user_profile",
     Globals.isAuthorised,
@@ -182,6 +183,10 @@ module.exports = (app, express) => {
   router.post("/update_application", isAuthorised, (req, res, next) => {
     const userObj = new ApplicationController().boot(req, res);
     return userObj.UpdateApplication();
+  });
+  router.post("/entry", (req, res, next) => {
+    const userObj = new BulkEntryController().boot(req, res);
+    return userObj.UniversityEntry();
   });
 
   app.use(process.env.BASE_API_URL, router);

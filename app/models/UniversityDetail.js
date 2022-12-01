@@ -10,13 +10,14 @@ var university_detail = new schema(
     },
 
     university_type: { type: String, default: "" },
-    established_year: { type: Number, default: "" },
-    world_rank: { type: Number, default: "" },
-    rating: { type: Number, default: "" },
+    established_year: { type: String, default: "" },
+    world_rank: { type: String, default: "" },
+    rating: { type: String, default: "" },
     accomodation: { type: Boolean, default: false },
     scholarship: { type: Boolean, default: false },
     part_time_work: { type: Boolean, default: false },
     about: { type: String, default: "" },
+    location: { type: String, default: "" },
   },
   {
     timestamps: true,

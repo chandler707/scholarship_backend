@@ -21,7 +21,7 @@ var courses = new schema(
       ref: "attribute_values",
       index: true,
     },
-    total_course_fees: { type: Number, default: "" },
+    total_course_fees: { type: String, default: "" },
     course_duration: { type: Number, default: "" },
     course_level: {
       type: mongoose.Schema.Types.ObjectId,
