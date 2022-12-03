@@ -12,6 +12,12 @@ let path = require("path");
 let helmet = require("helmet");
 var https = require("https");
 var fs = require("fs");
+const cors = require("cors");
+app.use(
+  cors({
+    origin: "https://calm-hen-woolens.cyclic.app",
+  })
+);
 
 global.appRoot = path.resolve(__dirname);
 global.__base = __dirname + "/";
