@@ -38,6 +38,10 @@ module.exports = (app, express) => {
     return userObj.GetUserProfile();
   });
 
+  router.get("/", (req, res) => {
+    res.send("CORS solved");
+  });
+
   router.post(
     "/update_user_profile_step_one",
     Globals.isAuthorised,
