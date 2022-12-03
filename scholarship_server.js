@@ -13,11 +13,7 @@ let helmet = require("helmet");
 var https = require("https");
 var fs = require("fs");
 const cors = require("cors");
-app.use(
-  cors({
-    origin: "https://app.cyclic.sh/#/",
-  })
-);
+app.use();
 
 global.appRoot = path.resolve(__dirname);
 global.__base = __dirname + "/";
