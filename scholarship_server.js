@@ -15,7 +15,7 @@ var fs = require("fs");
 const cors = require("cors");
 app.use(
   cors({
-    origin: "https://calm-hen-woolens.cyclic.app",
+    origin: "https://app.cyclic.sh/#/",
   })
 );
 
