@@ -13,7 +13,6 @@ let helmet = require("helmet");
 var https = require("https");
 var fs = require("fs");
 const cors = require("cors");
-app.use(cors());
 
 global.appRoot = path.resolve(__dirname);
 global.__base = __dirname + "/";
@@ -39,6 +38,7 @@ app.use("/", exp.static(__dirname + "/"));
 // });
 
 var server = http.createServer(app);
+app.use(cors());
 
 var options = {
   cors: {
