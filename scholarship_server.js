@@ -29,6 +29,14 @@ app.use(helmet());
 
 /* Old path for serving public folder */
 app.use("/", exp.static(__dirname + "/"));
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 var server = http.createServer(app);
 
