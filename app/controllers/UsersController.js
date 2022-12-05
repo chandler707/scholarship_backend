@@ -769,12 +769,43 @@ class UsersController extends Controller {
           });
         }
       } else {
-        let filter = { category_id: ObjectID(_this.req.body.category_id) };
+        if (!_this.req.body.page || !_this.req.body.pagesize) {
+          return _this.res.send({
+            status: 0,
+            message: "Please send proper data.",
+          });
+        }
+
+        let skip = (_this.req.body.page - 1) * _this.req.body.pagesize;
+        let sort = { createdAt: -1 };
+        let filter = {};
+        if (_this.req.body.category_id) {
+          filter["category_id"] = ObjectID(_this.req.body.category_id);
+        }
+        if (_this.req.body.course_level) {
+          filter["course_level"] = ObjectID(_this.req.body.course_level);
+        }
+        if (_this.req.body.required_degress) {
+          filter["required_degress"] = ObjectID(
+            _this.req.body.required_degress
+          );
+        }
+        if (_this.req.body.course_program) {
+          filter["course_program"] = ObjectID(_this.req.body.course_program);
+        }
+
         console.log("filter", filter);
+
         let details = await new Aggregation(
           Course
-        ).getUniversityDetailsByCourse(filter);
-        console.log("details", details);
+        ).getUniversityDetailsByCourse(
+          filter,
+          sort,
+          skip,
+          _this.req.body.pagesize
+        );
+        let count = await Course.countDocuments(filter);
+        // console.log("details", details);
         if (_.isEmpty(details)) {
           return _this.res.send({ status: 0, message: "user does not found" });
         } else {
@@ -782,6 +813,7 @@ class UsersController extends Controller {
             status: 1,
             message: "user data retured successfully",
             data: details,
+            count: count,
           });
         }
       }

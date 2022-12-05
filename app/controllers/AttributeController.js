@@ -297,6 +297,8 @@ class AttributesController extends Controller {
         }
       }
       if (!_this.req.body.attribute_value_id) {
+        console.log("this is hit");
+
         if (!_this.req.body.page || !_this.req.body.pagesize) {
           return this.res.send({
             status: 0,

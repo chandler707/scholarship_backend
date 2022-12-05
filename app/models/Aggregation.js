@@ -133,13 +133,16 @@ class Aggregation {
     });
   }
 
-  getUniversityDetailsByCourse(filter) {
+  getUniversityDetailsByCourse(filter, sort, skip, limit) {
     return new Promise((resolve, reject) => {
       try {
         this.collection.aggregate(
           [
             {
               $match: filter,
+            },
+            {
+              $sort: sort,
             },
             {
               $lookup: {
@@ -241,6 +244,13 @@ class Aggregation {
                 path: "$state_detail",
                 preserveNullAndEmptyArrays: true,
               },
+            },
+
+            {
+              $skip: skip,
+            },
+            {
+              $limit: limit,
             },
           ],
           (err, data) => {

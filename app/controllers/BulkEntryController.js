@@ -46,7 +46,7 @@ class BulkEntryController extends Controller {
       console.log(newData.length);
       let countryList = await StudentCountry.find();
       let stateList = await StudentState.find();
-      let courseCategory = await CourseCategory.find();
+      let courseCategory = await CourseCategory.find({ is_delete: false });
       let language = await Language.find({ is_delete: false });
       let attValue = await AttributeValue.find({ is_delete: false });
       languageArray = language;
@@ -59,13 +59,19 @@ class BulkEntryController extends Controller {
         courseCategory
       );
       if (datas) {
-        console.log("user data", userArray[0]);
-        console.log("detail data", universityDetailArray[0]);
-        console.log("course category", courseCategoryArray);
-        // console.log("course array", courseArray[0]);
+        console.log("user data", userArray.length);
+        console.log("detail data", universityDetailArray.length);
+        console.log("course category", courseCategoryArray.length);
+        console.log("course array", courseArray.length);
 
-        // console.log("attribute", storeAttributeArray[0]);
-        // console.log("lang", storeLangArray[0]);
+        console.log("attribute", storeAttributeArray.length);
+        console.log("lang", storeLangArray.length);
+        await User.insertMany(userArray);
+        await UniversityDetail.insertMany(universityDetailArray);
+        await CourseCategory.insertMany(courseCategoryArray);
+        await Course.insertMany(courseArray);
+        await AttributeValue.insertMany(storeAttributeArray);
+        await Language.insertMany(storeLangArray);
 
         _this.res.send({ message: "done" });
       }
@@ -462,9 +468,9 @@ async function SaveCourseData(newData, userId, courseCategory, len, num, fn) {
 
     if (newData[num]) {
       if (newData[num].category_name) {
-        let findoutcat = courseCategory.find(
-          (e) => e.category_name === newData[num].category_name
-        );
+        let findoutcat = courseCategory.find((e) => {
+          return e.category_name === newData[num].category_name;
+        });
 
         // let findoutcat = await CourseCategory.findOne({
         //   category_name: newData[num].category_name,
@@ -474,7 +480,16 @@ async function SaveCourseData(newData, userId, courseCategory, len, num, fn) {
           cat["_id"] = ObjectID();
           cat["category_name"] = newData[num].category_name;
 
-          courseCategoryArray.push(cat);
+          let check = courseCategoryArray.find((e) => {
+            return e.category_name === cat.category_name;
+          });
+          if (_.isEmpty(check)) {
+            courseCategoryArray.push(cat);
+          } else {
+            cat["_id"] = check._id;
+            cat["category_name"] = check.category_name;
+          }
+
           // let sav = await new Model(CourseCategory).store({
           //   category_name: newData[num].category_name,
           // });
@@ -558,13 +573,18 @@ async function SaveCourseDetailasd(newData, userId, cat, len, num, fn) {
             attribute_id: "63074c001911d12f40de32d7",
             attribute_value: newData[num].course_level,
           };
-          storeAttributeArray.push(add);
-
-          // let add = await new Model(AttributeValue).store({
-          //   attribute_id: "63074c001911d12f40de32d7",
-          //   attribute_value: newData[num].course_level,
-          // });
-          obj["course_level"] = add._id;
+          let check = storeAttributeArray.find((e) => {
+            return (
+              e.attribute_id === add.attribute_id &&
+              e.attribute_value === add.attribute_value
+            );
+          });
+          if (_.isEmpty(check)) {
+            obj["course_level"] = add._id;
+            storeAttributeArray.push(add);
+          } else {
+            obj["course_level"] = check._id;
+          }
         } else {
           obj["course_level"] = a._id;
         }
@@ -582,13 +602,19 @@ async function SaveCourseDetailasd(newData, userId, cat, len, num, fn) {
             attribute_id: "63074c0e1911d12f40de32db",
             attribute_value: newData[num].course_program,
           };
-          storeAttributeArray.push(add);
 
-          // let add = await new Model(AttributeValue).store({
-          //   attribute_id: "63074c0e1911d12f40de32db",
-          //   attribute_value: newData[num].course_program,
-          // });
-          obj["course_program"] = add._id;
+          let check = storeAttributeArray.find((e) => {
+            return (
+              e.attribute_id === add.attribute_id &&
+              e.attribute_value === add.attribute_value
+            );
+          });
+          if (_.isEmpty(check)) {
+            obj["course_program"] = add._id;
+            storeAttributeArray.push(add);
+          } else {
+            obj["course_program"] = check._id;
+          }
         } else {
           obj["course_program"] = a._id;
         }
@@ -606,13 +632,18 @@ async function SaveCourseDetailasd(newData, userId, cat, len, num, fn) {
             attribute_id: "631c27276ac06b00166054fb",
             attribute_value: newData[num].work_experience,
           };
-          storeAttributeArray.push(add);
-
-          // let add = await new Model(AttributeValue).store({
-          //   attribute_id: "631c27276ac06b00166054fb",
-          //   attribute_value: newData[num].work_experience,
-          // });
-          obj["work_experience"] = add._id;
+          let check = storeAttributeArray.find((e) => {
+            return (
+              e.attribute_id === add.attribute_id &&
+              e.attribute_value === add.attribute_value
+            );
+          });
+          if (_.isEmpty(check)) {
+            obj["work_experience"] = add._id;
+            storeAttributeArray.push(add);
+          } else {
+            obj["work_experience"] = check._id;
+          }
         } else {
           obj["work_experience"] = a._id;
         }
@@ -630,13 +661,18 @@ async function SaveCourseDetailasd(newData, userId, cat, len, num, fn) {
             attribute_id: "631c25736ac06b00166054ee",
             attribute_value: newData[num].required_degree,
           };
-          storeAttributeArray.push(add);
-
-          // let add = await new Model(AttributeValue).store({
-          //   attribute_id: "631c25736ac06b00166054ee",
-          //   attribute_value: newData[num].required_degree,
-          // });
-          obj["required_degress"] = add._id;
+          let check = storeAttributeArray.find((e) => {
+            return (
+              e.attribute_id === add.attribute_id &&
+              e.attribute_value === add.attribute_value
+            );
+          });
+          if (_.isEmpty(check)) {
+            obj["required_degress"] = add._id;
+            storeAttributeArray.push(add);
+          } else {
+            obj["required_degress"] = check._id;
+          }
         } else {
           obj["required_degress"] = a._id;
         }
@@ -654,11 +690,16 @@ async function SaveCourseDetailasd(newData, userId, cat, len, num, fn) {
             _id: ObjectID(),
             language_name: newData[num].course_language,
           };
-          storeLangArray.push(add);
-          // let add = await new Model(Language).store({
-          //   language_name: newData[num].course_language,
-          // });
-          obj["course_language"] = add._id;
+
+          let check = storeLangArray.find((e) => {
+            return e.language_name === add.language_name;
+          });
+          if (_.isEmpty(check)) {
+            obj["course_language"] = add._id;
+            storeLangArray.push(add);
+          } else {
+            obj["course_language"] = check._id;
+          }
         } else {
           obj["course_language"] = a._id;
         }

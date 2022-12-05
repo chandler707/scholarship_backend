@@ -92,7 +92,6 @@ module.exports = (app, express) => {
   });
 
   router.post("/get_university_profile", isAuthorised, (req, res, next) => {
-  
     const adminObj = new UserController().boot(req, res);
     return adminObj.GetUniversityProfile();
   });
